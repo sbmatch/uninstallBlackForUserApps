@@ -1,7 +1,10 @@
 package com.ma.powersoundswitch.activity;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -16,9 +19,12 @@ import androidx.lifecycle.ViewModelProvider;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FragmentUtils;
+import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ToastUtils;
 import com.huawei.agconnect.AGConnectApp;
 import com.huawei.agconnect.AGConnectInstance;
 import com.huawei.agconnect.crash.AGConnectCrash;
+import com.ma.powersoundswitch.MainActivity;
 import com.ma.powersoundswitch.R;
 import com.ma.powersoundswitch.fragment.SettingFragment;
 import com.ma.powersoundswitch.mViewModel;
@@ -26,10 +32,11 @@ import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
+import rikka.shizuku.Shizuku;
+
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private FragmentManager fm;
     private FragmentTransaction transition;
-    //private long exitTime;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,7 +60,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         viewModel.getCallString().observe(this, s -> {
              //Ops检查权限状态(AppOpsManager.permissionToOp(Manifest.permission.WRITE_SECURE_SETTINGS));
         });
-
     }
 
     @Override

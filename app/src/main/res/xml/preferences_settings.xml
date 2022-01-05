@@ -23,7 +23,7 @@
 
     <PreferenceCategory app:title="@string/setting">
 
-        <SwitchPreference app:key="开关" app:title="@string/power_sound"/>
+        <SwitchPreference app:key="开关" app:title="@string/power_sound" app:defaultValue="true"/>
 
     </PreferenceCategory>
 

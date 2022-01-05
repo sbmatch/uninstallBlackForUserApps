@@ -9,14 +9,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 
 
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.blankj.utilcode.util.ActivityUtils;
@@ -52,6 +55,31 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
+        CheckShizukuStat();
+
+        /*if (sp != null) {
+            if (!sp.getBoolean("start",false)) {
+                ToastUtils.showShort("此应用已拒绝启动,请授权后重试");
+                ActivityUtils.startHomeActivity();
+                LogUtils.e("此应用已拒绝启动！");
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    //AppUtils.exitApp();
+                    System.exit(0);
+                }).start();
+            }else {
+                editor.putBoolean("start", true).commit();
+                startActivity(intent);
+            }
+        }*/
+
+    }
+
+    private void CheckShizukuStat() {
         try {
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
@@ -82,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                     .setPositiveButton("启动Shizuku", (dialog, which) -> {
                         try {
                             Intent intent1 = new Intent().setComponent(new ComponentName("moe.shizuku.privileged.api","moe.shizuku.manager.MainActivity")).setAction(Intent.ACTION_VIEW);
-                            this.startActivity(intent1);
+                            this.startActivityForResult(intent1,1234);
                         }catch (NullPointerException e1){
                             LogUtils.e(e1.fillInStackTrace());
                             ToastUtils.showShort("Shizuku未安装或其他原因，未能启动");
@@ -93,29 +121,22 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                     }).show();
             ToastUtils.showShort("Shizuku服务未运行");
         }
-
-        /*if (sp != null) {
-            if (!sp.getBoolean("start",false)) {
-                ToastUtils.showShort("此应用已拒绝启动,请授权后重试");
-                ActivityUtils.startHomeActivity();
-                LogUtils.e("此应用已拒绝启动！");
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //AppUtils.exitApp();
-                    System.exit(0);
-                }).start();
-            }else {
-                editor.putBoolean("start", true).commit();
-                startActivity(intent);
-            }
-        }*/
-
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        if (resultCode >= 0){
+            switch (requestCode){
+                case 1234:
+                    CheckShizukuStat();
+                    break;
+            }
+        }
+
+
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     private void AtDialog(String title, String msg) {
         new AlertDialog.Builder(this)

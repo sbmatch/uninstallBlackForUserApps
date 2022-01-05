@@ -83,7 +83,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
            //LogUtils.e(ShellUtils.execCmd("/system/bin/sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c whoami",false));
         }
 
-  }
+    }
 
     private void initRish(String cmd) {
         try {
@@ -96,7 +96,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         }
 
         ShellUtils.execCmd("/system/bin/chmod 777 "+PathUtils.getInternalAppDataPath()+"/files/rish",false);
-
+        ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch android.permission.WRITE_SECURE_SETTINGS\" &",false);
     }
 
     /**
@@ -162,13 +162,14 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             switch (preference.getKey()){
                 case "开关":
                     if (((boolean) newValue)){
-                        //Settings.Global.putInt(cr,"power_sounds_enabled",1);
+                        Settings.Global.putInt(cr,"power_sounds_enabled",1);
                         ToastUtils.showShort("已开启");
-                       ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 1\" &",false);
+                       //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 1\" &",false);
                        }else {
                         ToastUtils.showShort("已禁用充电音效");
-                        //Settings.Global.putInt(cr,"power_sounds_enabled",0);
-                        ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 0\" &",false);
+                        LogUtils.e(newValue);
+                        Settings.Global.putInt(cr,"power_sounds_enabled",0);
+                        //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 0\" &",false);
                     }
                     LogUtils.e("电源音状态："+ Settings.Global.getString(cr,"power_sounds_enabled"));
                     break;
