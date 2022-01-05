@@ -50,16 +50,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = getSharedPreferences("StartSate",MODE_PRIVATE).edit();
 
-        if (savedInstanceState != null) {
-            if (!savedInstanceState.getBoolean("start")) {
-                LogUtils.e("此应用已拒绝启动！");
-                new Thread(() -> {
-                    ToastUtils.showShort("此应用已拒绝启动");
-                    AppUtils.exitApp();
-                }).start();
-            }
-        }
-
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
         try {
@@ -91,13 +81,12 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                     .setMessage("Shizuku服务未运行")
                     .setPositiveButton("启动Shizuku", (dialog, which) -> {
                         try {
-                            Intent intent = new Intent().setComponent(new ComponentName("moe.shizuku.privileged.api","moe.shizuku.manager.MainActivity")).setAction(Intent.ACTION_VIEW);
-                            this.startActivity(intent);
+                            Intent intent1 = new Intent().setComponent(new ComponentName("moe.shizuku.privileged.api","moe.shizuku.manager.MainActivity")).setAction(Intent.ACTION_VIEW);
+                            this.startActivity(intent1);
                         }catch (NullPointerException e1){
                             LogUtils.e(e1.fillInStackTrace());
                             ToastUtils.showShort("Shizuku未安装或其他原因，未能启动");
                         }
-
                     })
                     .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
                         LogUtils.i(dialog.toString());
@@ -105,24 +94,26 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             ToastUtils.showShort("Shizuku服务未运行");
         }
 
-        if (sp != null) {
+        /*if (sp != null) {
             if (!sp.getBoolean("start",false)) {
-                ToastUtils.showLong("此应用已拒绝启动,请授权后重试");
+                ToastUtils.showShort("此应用已拒绝启动,请授权后重试");
                 ActivityUtils.startHomeActivity();
                 LogUtils.e("此应用已拒绝启动！");
                 new Thread(() -> {
-                     try {
-                        Thread.sleep(4000);
+                    try {
+                        Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    AppUtils.exitApp();
+                    //AppUtils.exitApp();
+                    System.exit(0);
                 }).start();
             }else {
                 editor.putBoolean("start", true).commit();
                 startActivity(intent);
             }
-        }
+        }*/
+
     }
 
 
@@ -215,9 +206,11 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
     @Override
     public void onRequestPermissionResult(int requestCode, int grantResult) {
+
+
         if (grantResult == 0){
             LogUtils.i("太好了，授权完成");
-            editor.putBoolean("start", true).commit();
+            //editor.putBoolean("start", true).commit();
             startActivity(intent);
         }else {
 
@@ -231,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                         })
                         .setNegativeButton("这么嚣张？给爷死", (dialog, which) -> {
                             LogUtils.i(dialog.toString());
-
+                            editor.putBoolean("start", false).commit();
                             AppUtils.uninstallApp(getPackageName());
                             AppUtils.exitApp();
 
