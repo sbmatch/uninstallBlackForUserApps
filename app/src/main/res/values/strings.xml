@@ -6,8 +6,10 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+    <string name="opensource">开源项目</string>
     <string name="setting">设置</string>
     <string name="about">关于</string>
+    <string name="at">本应用基于开源项目 Shizuku 实现\n\n本工具无需常驻后台且修改后永久有效\n\n应用已开源至GitHub</string>
     <string name="other">其他</string>
     <string name="lab_cancel">取消</string>
     <string name="lab_submit">确定</string>

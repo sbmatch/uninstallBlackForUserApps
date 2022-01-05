@@ -1,5 +1,6 @@
 package com.ma.powersoundswitch.fragment;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentResolver;
 import android.net.Uri;
@@ -14,6 +15,7 @@ import androidx.preference.PreferenceFragmentCompat;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
+import com.blankj.utilcode.util.ClickUtils;
 import com.blankj.utilcode.util.ClipboardUtils;
 import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
@@ -30,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import rikka.shizuku.Shizuku;
 
 
 public class SettingFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceClickListener,Preference.OnPreferenceChangeListener {
@@ -56,6 +60,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         findPreference("about").setOnPreferenceClickListener(this);
         findPreference("开关").setOnPreferenceChangeListener(this);
         findPreference("appcanter").setOnPreferenceChangeListener(this);
+        findPreference("opensource").setOnPreferenceClickListener(this);
         cr = new ContentResolver(getContext()) {
             @Nullable
             @Override
@@ -128,9 +133,21 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     public boolean onPreferenceClick(Preference preference) {
         LogUtils.i(preference.getKey());
         switch (preference.getKey()){
+            case "opensource":
+
+                break;
             case "about":
                 //viewModel.add(AppUtils.getAppVersionName());
-                ToastUtils.showShort(AppUtils.getAppVersionName());
+                //ToastUtils.showShort(AppUtils.getAppVersionName());
+                new AlertDialog.Builder(requireContext())
+                        .setCancelable(false)
+                        .setIcon(R.drawable.ic_launcher_foreground)
+                        .setTitle(R.string.about)
+                        .setMessage(R.string.at)
+                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> { })
+                        //.setNegativeButton(R.string.lab_cancel, (dialog, which) -> { LogUtils.i(dialog.toString()); })
+                        .show();
+
                 break;
         }
         return true;
@@ -140,6 +157,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
         try {
+
             switch (preference.getKey()){
                 case "开关":
                     if (((boolean) newValue)){
@@ -165,7 +183,8 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         }catch (Exception e){
             //e.fillInStackTrace();
             LogUtils.e(e.fillInStackTrace());
-            ActivityUtils.finishActivity(requireActivity());
+            ToastUtils.showShort(e.fillInStackTrace().toString());
+            //ActivityUtils.finishActivity(requireActivity());
         }
 
         return true;

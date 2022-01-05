@@ -43,10 +43,13 @@ dependencies {
 
     implementation 'com.huawei.agconnect:agconnect-core:1.6.2.300'
     implementation 'com.huawei.agconnect:agconnect-crash:1.6.2.300'
-    //implementation 'com.huawei.agconnect:agconnect-crash-native:1.6.2.300'
+    implementation 'com.huawei.agconnect:agconnect-crash-native:1.6.2.300'
 
     //Android常用工具库
     implementation 'com.blankj:utilcodex:1.31.0'
+    // 友盟统计SDK
+   // implementation  'com.umeng.umsdk:common:9.4.2'// 必选
+   // implementation  'com.umeng.umsdk:asms:1.4.0'// 必选
     //微软AppCenter
     def appCenterSdkVersion = '4.3.1'
     implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"

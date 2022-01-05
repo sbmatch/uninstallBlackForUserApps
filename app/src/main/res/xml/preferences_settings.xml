@@ -33,6 +33,13 @@
             android:summary="@string/acinfo"
             android:defaultValue="true"
             app:icon="@drawable/ic_baseline_bug_report_24"/>
+
+        <PreferenceScreen
+            android:key="opensource"
+            app:icon="@drawable/ic_baseline_open_in_browser_24"
+            app:title="@string/opensource">
+        </PreferenceScreen>
+
         <PreferenceScreen
             android:key="about"
             app:icon="@drawable/ic_baseline_error_24"
