@@ -9,6 +9,7 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -134,7 +135,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         LogUtils.i(preference.getKey());
         switch (preference.getKey()){
             case "opensource":
-
+                openCustomTabs("https://github.com/sbmatch/powersoundswitch");
                 break;
             case "about":
                 //viewModel.add(AppUtils.getAppVersionName());
@@ -190,11 +191,11 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         return true;
     }
 
-   /* private void openCustomTabs(String url) {
+    private void openCustomTabs(String url) {
         CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
         intentBuilder.setShowTitle(true);
         CustomTabsIntent customTabsIntent = intentBuilder.build();
         customTabsIntent.launchUrl(requireContext(), Uri.parse(url));
-    }*/
+    }
 
 }
