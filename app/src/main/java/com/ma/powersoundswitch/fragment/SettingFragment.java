@@ -176,6 +176,10 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
             } else {
                 // Request the permission
+                p1.setSelectable(false);
+                p2.setSelectable(false);
+                p5.setSelectable(false);
+
                 new AlertDialog.Builder(requireContext())
                         .setCancelable(false)
                         .setTitle("权限申请")
@@ -212,9 +216,10 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(i, 66);
                 viewModel.getCallString().observe(this, s -> {
-                    Settings.Global.putString(cr, "low_battery_sound", s);
                     p2.setSummary(s);
-                    ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                    p2.setDefaultValue("true");
+                        Settings.Global.putString(cr, "low_battery_sound",s);
+                        ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
                 });
                 break;
             case "opensource":
@@ -260,12 +265,14 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                     case "low_battery_sound":
                         LogUtils.i(preference.getKey()+" is "+newValue);
                         if (((boolean) newValue)) {
-                            //ToastUtils.showShort(getString(R.string.low_battery_sound) + "");
+                            ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + Settings.Global.getString(cr, "low_battery_sound"));
+
                             viewModel.getCallString().observe(this, s -> {
                                 Settings.Global.putString(cr, "low_battery_sound", s);
                                 p2.setSummary(s);
                                 ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
                             });
+
                         }else {
                             Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound",""));
                             p2.setSummary("当前是系统默认值");
