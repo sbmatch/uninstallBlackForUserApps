@@ -211,6 +211,11 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             case "low_battery_sound_path":
                 Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(i, 66);
+                viewModel.getCallString().observe(this, s -> {
+                    Settings.Global.putString(cr, "low_battery_sound", s);
+                    p2.setSummary(s);
+                    ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                });
                 break;
             case "opensource":
                 openCustomTabs("https://github.com/sbmatch/powersoundswitch");
@@ -255,7 +260,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                     case "low_battery_sound":
                         LogUtils.i(preference.getKey()+" is "+newValue);
                         if (((boolean) newValue)) {
-                            AppCenter.setEnabled(true);
+                            //ToastUtils.showShort(getString(R.string.low_battery_sound) + "");
                             viewModel.getCallString().observe(this, s -> {
                                 Settings.Global.putString(cr, "low_battery_sound", s);
                                 p2.setSummary(s);
@@ -264,6 +269,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                         }else {
                             Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound",""));
                             p2.setSummary("当前是系统默认值");
+                            ToastUtils.showShort("已恢复为默认值");
                         }
                         break;
                     case "appcanter":
