@@ -163,7 +163,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             p1.setEnabled(true);
             editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
             LogUtils.i("已获授权: "+permission+"\n已备份默认数据"+sp.getString("low_battery_sound",""));
-            p2.setSummary("当前是系统默认值\n"+sp.getString("low_battery_sound",""));
+            p2.setSummary("当前是系统默认值");
         }
         return ContextCompat.checkSelfPermission(requireContext(),permission);
     }

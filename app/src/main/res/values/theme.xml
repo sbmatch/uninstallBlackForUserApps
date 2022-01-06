@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<<<<<<< HEAD
 <resources>
 <style name="Theme.MaterialComponents.Ma" parent="Base.Theme.MaterialComponents">
     <item name="android:fitsSystemWindows">true</item>
@@ -11,6 +10,3 @@
 <item name="bottomSheetStyle">@style/Widget.MaterialComponents.BottomSheet.Modal</item>
 </style>
 </resources>
-=======
-<resources></resources>
->>>>>>> origin/main
