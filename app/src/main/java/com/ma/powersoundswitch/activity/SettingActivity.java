@@ -1,11 +1,8 @@
 package com.ma.powersoundswitch.activity;
 
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
@@ -17,16 +14,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
-import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.FragmentUtils;
 import com.blankj.utilcode.util.LogUtils;
-import com.blankj.utilcode.util.ToastUtils;
-import com.huawei.agconnect.AGConnectApp;
-import com.huawei.agconnect.AGConnectInstance;
-import com.huawei.agconnect.crash.AGConnectCrash;
-import com.ma.powersoundswitch.MainActivity;
+import com.ma.powersoundswitch.ContentUriUtil;
 import com.ma.powersoundswitch.R;
 import com.ma.powersoundswitch.fragment.SettingFragment;
 import com.ma.powersoundswitch.mViewModel;
@@ -34,23 +25,21 @@ import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
-import rikka.shizuku.Shizuku;
+import java.io.File;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private FragmentManager fm;
     private FragmentTransaction transition;
+    private mViewModel viewModel;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
 
-        AppCenter.start(getApplication(), "b5f71581-37c7-42a2-b631-45a8a56a17df", Analytics.class, Crashes.class);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.setting);
 
-        //getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setTitle("设置");
 
@@ -60,16 +49,23 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         FragmentUtils.add(fm,new SettingFragment(),R.id.fragmentContainerView);
         FragmentUtils.show(fm);
 
-        mViewModel viewModel = new ViewModelProvider(this).get(mViewModel.class);
-        viewModel.getCallString().observe(this, s -> {
-             //Ops检查权限状态(AppOpsManager.permissionToOp(Manifest.permission.WRITE_SECURE_SETTINGS));
-        });
+        viewModel = new ViewModelProvider(this).get(mViewModel.class);
+
     }
 
     @Override
     public void onClick(View v) {
 
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode == RESULT_OK) {
+            viewModel.add(ContentUriUtil.getPath(this,data.getData()));
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -88,6 +84,5 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             }
         }).start();
         return super.onKeyDown(keyCode, event);
-
     }
 }

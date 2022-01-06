@@ -1,15 +1,23 @@
 package com.ma.powersoundswitch.fragment;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -21,6 +29,7 @@ import com.blankj.utilcode.util.ClipboardUtils;
 import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
+import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
@@ -33,6 +42,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLConnection;
+import java.util.Objects;
 
 import rikka.shizuku.Shizuku;
 
@@ -45,6 +56,11 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
     private ContentResolver cr;
 
+    private Preference p,p1,p2,p3,p4,p5;
+
+    private SharedPreferences sp;
+    private SharedPreferences.Editor editor;
+
     public SettingFragment() {
 
     }
@@ -54,14 +70,25 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(mViewModel.class); // 实例化发送端
-        viewModel.getCallString().observe(this, s -> { //
-            // LogUtils.i(s);
-        });
-        LogUtils.i("已经创建： "+this.getContext());
-        findPreference("about").setOnPreferenceClickListener(this);
-        findPreference("开关").setOnPreferenceChangeListener(this);
-        findPreference("appcanter").setOnPreferenceChangeListener(this);
-        findPreference("opensource").setOnPreferenceClickListener(this);
+
+        p = findPreference("about");
+        p1 =findPreference("power_sound");
+        p2 = findPreference("low_battery_sound");
+        p3 =findPreference("appcanter");
+        p4 = findPreference("opensource");
+        p5 = findPreference("low_battery_sound_path");
+
+
+        p.setOnPreferenceClickListener(this);
+        p1.setOnPreferenceChangeListener(this);
+        p2.setOnPreferenceChangeListener(this);
+        p3.setOnPreferenceChangeListener(this);
+        p4.setOnPreferenceClickListener(this);
+        p5.setOnPreferenceClickListener(this);
+
+        sp = requireContext().getSharedPreferences("status",MODE_PRIVATE);
+        editor = requireContext().getSharedPreferences("status",MODE_PRIVATE).edit();
+
         cr = new ContentResolver(getContext()) {
             @Nullable
             @Override
@@ -77,10 +104,14 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
         if (!FileUtils.isFileExists(PathUtils.getInternalAppDataPath()+"/files/rish")){
             initRish(cmd);
-            LogUtils.i("不存在"+PathUtils.getInternalAppDataPath()+"/files/rish");
+            LogUtils.i("File Not Fount: "+PathUtils.getInternalAppDataPath()+"/files/rish"+"\nBut We Are fixed it");
         }else {
-            LogUtils.i("文件存在");
-           //LogUtils.e(ShellUtils.execCmd("/system/bin/sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c whoami",false));
+            checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+            //LogUtils.e("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false) ;
+        }
+
+        if (ContextCompat.checkSelfPermission(requireContext(),Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
+            p1.setEnabled(false);
         }
 
     }
@@ -96,8 +127,10 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         }
 
         ShellUtils.execCmd("/system/bin/chmod 777 "+PathUtils.getInternalAppDataPath()+"/files/rish",false);
-        ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch android.permission.WRITE_SECURE_SETTINGS\" &",false);
+        //Ops检查权限状态(AppOpsManager.permissionToOp(Manifest.permission.WRITE_SECURE_SETTINGS));
+        //checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
     }
+
 
     /**
      * 将inputStream转化为file
@@ -120,6 +153,48 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         }
     }
 
+    private int checkPermissionStatus(String permission) //调用ops权限管理器校验权限是否真的授权
+    {
+        if (ContextCompat.checkSelfPermission(requireContext(),permission) != 0) {
+            LogUtils.e(permission+" 未授权");
+            ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
+            editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
+        }else {
+            p1.setEnabled(true);
+            editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
+            LogUtils.i("已获授权: "+permission+"\n已备份默认数据"+sp.getString("low_battery_sound",""));
+            p2.setSummary("当前是系统默认值\n"+sp.getString("low_battery_sound",""));
+        }
+        return ContextCompat.checkSelfPermission(requireContext(),permission);
+    }
+
+    private void checkShizukuStat() {
+        try {
+            if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                // Granted
+                LogUtils.i("已授权shizuku");
+                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+            } else {
+                // Request the permission
+                new AlertDialog.Builder(requireContext())
+                        .setCancelable(false)
+                        .setTitle("权限申请")
+                        .setMessage("要授权 Shizuku 吗")
+                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
+                            Shizuku.requestPermission(1001);
+                            checkShizukuStat();
+                        })
+                        .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
+                            LogUtils.i(dialog.toString());
+                        }).show();
+            }
+
+        }catch (IllegalStateException e){
+            LogUtils.e(e.fillInStackTrace());
+        }
+    }
+
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -132,13 +207,15 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        LogUtils.i(preference.getKey());
         switch (preference.getKey()){
+            case "low_battery_sound_path":
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(i, 66);
+                break;
             case "opensource":
                 openCustomTabs("https://github.com/sbmatch/powersoundswitch");
                 break;
             case "about":
-                //viewModel.add(AppUtils.getAppVersionName());
                 //ToastUtils.showShort(AppUtils.getAppVersionName());
                 new AlertDialog.Builder(requireContext())
                         .setCancelable(false)
@@ -148,7 +225,6 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                         .setPositiveButton(R.string.lab_submit, (dialog, which) -> { })
                         //.setNegativeButton(R.string.lab_cancel, (dialog, which) -> { LogUtils.i(dialog.toString()); })
                         .show();
-
                 break;
         }
         return true;
@@ -157,38 +233,57 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        try {
+        if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) == 0)
+        {
+            try {
+                switch (preference.getKey()) {
+                    case "power_sound":
+                            if (((boolean) newValue)) {
+                                LogUtils.i("已开启");
+                                Settings.Global.putInt(cr, "power_sounds_enabled", 1);
+                                ToastUtils.showShort("已开启");
+                                //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 1\" &",false);
+                            } else {
+                                ToastUtils.showShort("已禁用" + getString(R.string.power_sound));
+                                //LogUtils.e(newValue);
+                                Settings.Global.putInt(cr, "power_sounds_enabled", 0);
+                                //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 0\" &",false);
+                            }
 
-            switch (preference.getKey()){
-                case "开关":
-                    if (((boolean) newValue)){
-                        Settings.Global.putInt(cr,"power_sounds_enabled",1);
-                        ToastUtils.showShort("已开启");
-                       //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 1\" &",false);
-                       }else {
-                        ToastUtils.showShort("已禁用充电音效");
-                        LogUtils.e(newValue);
-                        Settings.Global.putInt(cr,"power_sounds_enabled",0);
-                        //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 0\" &",false);
-                    }
-                    LogUtils.e("电源音状态："+ Settings.Global.getString(cr,"power_sounds_enabled"));
-                    break;
-                case "appcanter":
-                    if (((boolean) newValue)){
-                        AppCenter.setEnabled(true);
-                    }else {
-                        AppCenter.setEnabled(false);
-                    }
-                    break;
+                        LogUtils.e("电源音状态：" + Settings.Global.getString(cr, "power_sounds_enabled"));
+                        break;
+                    case "low_battery_sound":
+                        LogUtils.i(preference.getKey()+" is "+newValue);
+                        if (((boolean) newValue)) {
+                            AppCenter.setEnabled(true);
+                            viewModel.getCallString().observe(this, s -> {
+                                Settings.Global.putString(cr, "low_battery_sound", s);
+                                p2.setSummary(s);
+                                ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                            });
+                        }else {
+                            Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound",""));
+                            p2.setSummary("当前是系统默认值");
+                        }
+                        break;
+                    case "appcanter":
+                        if (((boolean) newValue)) {
+                            AppCenter.setEnabled(true);
+                        } else {
+                            AppCenter.setEnabled(false);
+                        }
+                        break;
+                }
+
+            } catch (Exception e) {
+                //e.fillInStackTrace();
+                LogUtils.e(e.fillInStackTrace());
+                ToastUtils.showShort(e.fillInStackTrace().toString());
+                //ActivityUtils.finishActivity(requireActivity());
             }
-
-        }catch (Exception e){
-            //e.fillInStackTrace();
-            LogUtils.e(e.fillInStackTrace());
-            ToastUtils.showShort(e.fillInStackTrace().toString());
-            //ActivityUtils.finishActivity(requireActivity());
+        }else {
+            checkShizukuStat();
         }
-
         return true;
     }
 

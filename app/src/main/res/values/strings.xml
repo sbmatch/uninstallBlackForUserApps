@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">充电提示音开关</string>
+    <string name="app_name">设置全局音效</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -14,8 +14,11 @@
     <string name="lab_cancel">取消</string>
     <string name="lab_submit">确定</string>
     <string name="power_sound">充电提示音</string>
+    <string name="low_battery_sound">低电量提示音</string>
+    <string name="low_battery_sound_path">自定义低电量提示音</string>
     <string name="appcenter">发送错误报告</string>
     <string name="acinfo">AppCenter</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="status">状态</string>
 </resources>

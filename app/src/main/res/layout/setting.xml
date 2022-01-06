@@ -5,6 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+
     <RelativeLayout
         android:id="@+id/relatively"
         android:layout_width="match_parent"
@@ -14,6 +16,7 @@
             android:id="@+id/fragmentContainerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
 
     </RelativeLayout>
 

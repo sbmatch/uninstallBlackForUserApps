@@ -1,9 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="10dp"
     tools:context=".MainActivity">
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardview"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            app:cardCornerRadius="16dp"
+            app:cardMaxElevation="1dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.473"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" >
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:padding="12dp"
+                    android:layout_height="match_parent">
+
+                        <ImageView
+                            android:id="@+id/imageview"
+                            android:layout_width="58dp"
+                            android:layout_height="58dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:layout_centerInParent="true"
+                            android:layout_alignParentLeft="true"
+                            android:layout_marginBottom="12dp"
+                            android:contentDescription="@string/status"
+                            android:src="@drawable/ic_launcher_background" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@+id/imageview"
+                            android:paddingTop="16dp"
+                            android:paddingBottom="6dp"
+                            android:text="Shizuku 没有授权"
+                            android:textSize="20dp" />
+
+                        <androidx.appcompat.widget.AppCompatTextView
+                            android:id="@+id/tv2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@+id/imageview"
+                            android:layout_below="@+id/tv"
+                            android:hint="@string/upsdk_getting_message_fail_prompt_toast"
+                            android:textSize="14dp" />
+
+
+                </RelativeLayout>
+
+
+        </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

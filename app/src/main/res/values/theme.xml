@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<style name="Theme.MaterialComponents.Ma" parent="Base.Theme.MaterialComponents">
+    <item name="android:fitsSystemWindows">true</item>
+    <item name="android:windowTranslucentStatus">true</item>
+</style>
+<style name="Theme.MaterialComponents.BottomSheetDialog" parent="Theme.MaterialComponents.Dialog">
+<item name="android:windowBackground">@android:color/transparent</item>
+<item name="android:windowAnimationStyle">@style/Animation.MaterialComponents.BottomSheetDialog</item>
+<item name="bottomSheetStyle">@style/Widget.MaterialComponents.BottomSheet.Modal</item>
+</style>
+</resources>

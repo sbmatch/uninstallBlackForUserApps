@@ -21,10 +21,13 @@
     app:allowDividerAbove="false"
     app:allowDividerBelow="false">
 
-    <PreferenceCategory app:title="@string/setting">
-
-        <SwitchPreference app:key="开关" app:title="@string/power_sound" app:defaultValue="true"/>
-
+    <PreferenceCategory app:title="设置系统全局音效" >
+        <SwitchPreference app:key="power_sound" app:title="@string/power_sound" app:defaultValue="true" app:icon="@drawable/ic_baseline_battery_charging_full_24" app:summaryOn="已开启" app:summaryOff="已禁用"/>
+        <SwitchPreference app:key="low_battery_sound" app:title="@string/low_battery_sound" app:defaultValue="true" app:icon="@drawable/ic_baseline_battery_alert_24"/>
+        <PreferenceScreen
+            android:key="low_battery_sound_path"
+            app:title="@string/low_battery_sound_path">
+        </PreferenceScreen>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/other">

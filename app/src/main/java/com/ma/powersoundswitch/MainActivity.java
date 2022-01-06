@@ -1,5 +1,6 @@
 package com.ma.powersoundswitch;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
@@ -15,24 +16,39 @@ import android.os.Bundle;
 
 
 import android.provider.Settings;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.BarUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.PermissionUtils;
 import com.blankj.utilcode.util.RomUtils;
+import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.ma.powersoundswitch.activity.SettingActivity;
+import com.microsoft.appcenter.AppCenter;
+import com.microsoft.appcenter.analytics.Analytics;
+import com.microsoft.appcenter.crashes.Crashes;
 
 import rikka.shizuku.Shizuku;
 
@@ -44,18 +60,31 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private static Bundle outState;
     private SharedPreferences sp;
     private SharedPreferences.Editor editor;
+    private mViewModel viewModel;
+    private ImageView imageView;
+    private Button button;
+    private CardView cardView;
+    private TextView textview,textview2;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppCenter.start(getApplication(), "b5f71581-37c7-42a2-b631-45a8a56a17df", Analytics.class, Crashes.class);
         Utils.init(getApplication());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         intent = new Intent(this, SettingActivity.class);
-        //BarUtils.setStatusBarColor(this, Color.TRANSPARENT);
-        //getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        cardView = findViewById(R.id.cardview);
+        imageView = findViewById(R.id.imageview);
+        textview= findViewById(R.id.tv);
+        textview2 = findViewById(R.id.tv2);
+
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR );
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = getSharedPreferences("StartSate",MODE_PRIVATE).edit();
+
+        viewModel = new ViewModelProvider(this).get(mViewModel.class);
 
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
@@ -83,13 +112,27 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
     }
 
+    private int checkPermissionStatus(String permission) //调用ops权限管理器校验权限是否真的授权
+    {
+        if (ContextCompat.checkSelfPermission(getBaseContext(),permission) != 0) {
+            LogUtils.e(permission+" 未授权");
+            ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
+
+        }else {
+            LogUtils.i("已获授权: "+permission);
+            editor.putBoolean("start", true).commit();
+            startActivity(intent);
+        }
+        return ContextCompat.checkSelfPermission(getBaseContext(),permission);
+    }
+
+
     private void CheckShizukuStat() {
         try {
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
-                LogUtils.i("已授权");
-                editor.putBoolean("start", true).commit();
-                startActivity(intent);
+                LogUtils.i("已授权shizuku");
+                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
                 //startActivity(new Intent(this,SettingActivity.class));
             } else {
                 // Request the permission
@@ -158,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+       // getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -188,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                 switch (a){
                     case "android:audio_media_volume":
                         break;
-                    case AppOpsManager.OPSTR_WRITE_SETTINGS:
+                    case "android:write_secure_settings":
                         ToastUtils.showShort("已授权"+a);
                         break;
                 }
@@ -236,22 +279,27 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         if (grantResult == 0){
             LogUtils.i("太好了，授权完成");
             //editor.putBoolean("start", true).commit();
-            startActivity(intent);
+            textview.setText("已授权");
+            textview2.setHint(null);
+            checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+           // startActivity(intent);
         }else {
 
             try {
                 new AlertDialog.Builder(this)
                         .setCancelable(false)
                         .setTitle("权限申请")
-                        .setMessage("因本应用仅适配Shizuku \n\n如需继续使用请授权，否则请卸载本应用\n\n再给一次机会不咯？")
+                        .setMessage("因本应用仅适配Shizuku \n\n如需继续使用请授权，否则程序无法工作\n\n您想再次授权吗？")
                         .setPositiveButton("授权", (dialog, which) -> {
                             Shizuku.requestPermission(REQUEST_CODE);
                         })
-                        .setNegativeButton("这么嚣张？给爷死", (dialog, which) -> {
-                            LogUtils.i(dialog.toString());
-                            editor.putBoolean("start", false).commit();
+                        .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
+                            /*editor.putBoolean("start", false).commit();
                             AppUtils.uninstallApp(getPackageName());
-                            AppUtils.exitApp();
+                            AppUtils.exitApp();*/
+                            viewModel.add("未授权");
+                            ToastUtils.showShort("好的，我们尊重您的决定");
+
 
                         }).show();
             }catch (Exception e2){
