@@ -19,6 +19,10 @@ import android.os.Bundle;
 
 
 import android.os.IBinder;
+import android.os.IInterface;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.Menu;
@@ -56,6 +60,9 @@ import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
+import java.io.FileDescriptor;
+import java.lang.reflect.Method;
+
 import rikka.shizuku.Shizuku;
 import rikka.shizuku.ShizukuBinderWrapper;
 import rikka.shizuku.SystemServiceHelper;
@@ -76,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private  IBinder iBinder ;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCenter.start(getApplication(), "b5f71581-37c7-42a2-b631-45a8a56a17df", Analytics.class, Crashes.class);
@@ -89,7 +97,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         textview= findViewById(R.id.tv);
         textview2 = findViewById(R.id.tv2);
 
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR );
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = getSharedPreferences("StartSate",MODE_PRIVATE).edit();
 
@@ -97,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
-        CheckShizukuStat();
+        checkShizukuStat();
 
         /*if (sp != null) {
             if (!sp.getBoolean("start",false)) {
@@ -121,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
     }
 
-    private int checkPermissionStatus(String permission) //调用ops权限管理器校验权限是否真的授权
+    private int checkPermissionStatus(String permission) throws RemoteException //调用ops权限管理器校验权限是否真的授权
     {
         if (ContextCompat.checkSelfPermission(getBaseContext(),permission) != 0) {
             LogUtils.e(permission+" 未授权");
@@ -130,18 +137,33 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         }else {
             LogUtils.i("已获授权: "+permission);
             editor.putBoolean("start", true).commit();
-            startActivity(intent);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    startActivity(intent);
+                }
+            }).start();
+
+            //iBinder =  new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar"));
+            //LogUtils.e(iBinder.getInterfaceDescriptor() +"\n");
 
         }
         return ContextCompat.checkSelfPermission(getBaseContext(),permission);
     }
 
 
-    private void CheckShizukuStat() {
+    private void checkShizukuStat() {
         try {
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
                 LogUtils.i("已授权shizuku");
+                textview.setText("已授权");
+                textview2.setHint(null);
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
                 //startActivity(new Intent(this,SettingActivity.class));
             } else {
@@ -158,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                         }).show();
             }
 
-        }catch (IllegalStateException e){
+        }catch (IllegalStateException | RemoteException e){
             LogUtils.e(e.fillInStackTrace());
             new AlertDialog.Builder(this)
                     .setCancelable(false)
@@ -186,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         if (resultCode >= 0){
             switch (requestCode){
                 case 1234:
-                    CheckShizukuStat();
+                    checkShizukuStat();
                     break;
             }
         }
@@ -212,8 +234,26 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
        // getMenuInflater().inflate(R.menu.menu_main, menu);
+        menu.add(0,1,0,"授权").setIcon(R.drawable.ic_baseline_settings_24);
         return true;
     }
+
+
+    @Override
+    public boolean onMenuOpened(int featureId, @NonNull Menu menu) {
+
+        if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")) {
+            try {
+                Method method = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
+                method.setAccessible(true);
+                method.invoke(menu, true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return super.onMenuOpened(featureId, menu);
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -225,6 +265,11 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             ActivityUtils.startActivity(intent);
+            return true;
+        }
+        if (id == 1) {
+            //ActivityUtils.startActivity(intent);
+            checkShizukuStat();
             return true;
         }
 
@@ -282,6 +327,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         editor.putBoolean("start", false).commit();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     public void onRequestPermissionResult(int requestCode, int grantResult) {
 
@@ -292,8 +338,12 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             textview.setText("已授权");
             textview2.setHint(null);
 
-            checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-           // startActivity(intent);
+            try {
+                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            // startActivity(intent);
         }else {
 
             try {
