@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                 // Granted
                 LogUtils.i("已授权shizuku");
                 textview.setText("已授权");
+                imageView.setImageResource(R.drawable.ic_twotone_done_24);
                 textview2.setHint(null);
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
                 //startActivity(new Intent(this,SettingActivity.class));
@@ -327,7 +328,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         editor.putBoolean("start", false).commit();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     public void onRequestPermissionResult(int requestCode, int grantResult) {
 
@@ -336,6 +336,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             LogUtils.i("太好了，授权完成");
             //editor.putBoolean("start", true).commit();
             textview.setText("已授权");
+            imageView.setImageResource(R.drawable.ic_twotone_done_24);
             textview2.setHint(null);
 
             try {
