@@ -14,11 +14,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MaterialComponents.Ma">
+        android:theme="@style/Theme.MaterialComponents.Light">
+
         <service
-            android:name=".service.mService"
-            android:enabled="true"
-            android:exported="true"></service>
+            android:name=".service.mService"/>
 
         <activity
             android:name=".MainActivity"

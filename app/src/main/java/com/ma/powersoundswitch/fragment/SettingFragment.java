@@ -93,6 +93,9 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         p4.setOnPreferenceClickListener(this);
         p5.setOnPreferenceClickListener(this);
 
+
+        p3.setSelectable(false);
+
         sp = requireContext().getSharedPreferences("status",MODE_PRIVATE);
         editor = requireContext().getSharedPreferences("status",MODE_PRIVATE).edit();
 
@@ -175,36 +178,6 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         return ContextCompat.checkSelfPermission(requireContext(),permission);
     }
 
-    private void checkShizukuStat() {
-        try {
-            if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                // Granted
-                LogUtils.i("已授权shizuku");
-                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-
-            } else {
-                // Request the permission
-                p1.setSelectable(false);
-                p2.setSelectable(false);
-                p5.setSelectable(false);
-
-                new AlertDialog.Builder(requireContext())
-                        .setCancelable(false)
-                        .setTitle("权限申请")
-                        .setMessage("要授权 Shizuku 吗")
-                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
-                            Shizuku.requestPermission(1001);
-                            checkShizukuStat();
-                        })
-                        .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                            LogUtils.i(dialog.toString());
-                        }).show();
-            }
-
-        }catch (IllegalStateException e){
-            LogUtils.e(e.fillInStackTrace());
-        }
-    }
 
 
     @Override
@@ -303,7 +276,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 //ActivityUtils.finishActivity(requireActivity());
             }
         }else {
-            checkShizukuStat();
+            ToastUtils.showShort("未授权");
         }
         return true;
     }
