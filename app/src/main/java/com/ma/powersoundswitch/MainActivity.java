@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.app.Dialog;
+import android.app.Service;
+import android.app.StatusBarManager;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,9 +14,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 
+import android.os.IBinder;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.Menu;
@@ -30,6 +34,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
@@ -45,12 +50,15 @@ import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
+import com.huawei.hms.adapter.sysobs.SystemManager;
 import com.ma.powersoundswitch.activity.SettingActivity;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
 import rikka.shizuku.Shizuku;
+import rikka.shizuku.ShizukuBinderWrapper;
+import rikka.shizuku.SystemServiceHelper;
 
 public class MainActivity extends AppCompatActivity implements Shizuku.OnRequestPermissionResultListener {
 
@@ -65,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private Button button;
     private CardView cardView;
     private TextView textview,textview2;
+    private  IBinder iBinder ;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
     @Override
@@ -122,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             LogUtils.i("已获授权: "+permission);
             editor.putBoolean("start", true).commit();
             startActivity(intent);
+
         }
         return ContextCompat.checkSelfPermission(getBaseContext(),permission);
     }
@@ -281,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             //editor.putBoolean("start", true).commit();
             textview.setText("已授权");
             textview2.setHint(null);
+
             checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
            // startActivity(intent);
         }else {

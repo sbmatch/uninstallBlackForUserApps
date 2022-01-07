@@ -4,18 +4,21 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.StatusBarManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
@@ -46,6 +49,10 @@ import java.net.URLConnection;
 import java.util.Objects;
 
 import rikka.shizuku.Shizuku;
+import rikka.shizuku.ShizukuApiConstants;
+import rikka.shizuku.ShizukuBinderWrapper;
+import rikka.shizuku.ShizukuSystemProperties;
+import rikka.shizuku.SystemServiceHelper;
 
 
 public class SettingFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceClickListener,Preference.OnPreferenceChangeListener {
@@ -162,7 +169,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         }else {
             p1.setEnabled(true);
             editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
-            LogUtils.i("已获授权: "+permission+"\n已备份默认数据"+sp.getString("low_battery_sound",""));
+            LogUtils.i("已备份默认数据"+sp.getString("low_battery_sound",""));
             p2.setSummary("当前是系统默认值");
         }
         return ContextCompat.checkSelfPermission(requireContext(),permission);
@@ -174,6 +181,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 // Granted
                 LogUtils.i("已授权shizuku");
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+
             } else {
                 // Request the permission
                 p1.setSelectable(false);
