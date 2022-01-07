@@ -95,13 +95,9 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
         intent = new Intent(this, SettingActivity.class);
         cardView = findViewById(R.id.cardview);
-        cardView2 = findViewById(R.id.cardview2);
         imageView = findViewById(R.id.imageview);
-        imageView2 = findViewById(R.id.imageview2);
         textview= findViewById(R.id.tv);
         textview2 = findViewById(R.id.tv2);
-        ttextView = findViewById(R.id.tvv);
-        ttextView2 = findViewById(R.id.tvv2);
 
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = getSharedPreferences("StartSate",MODE_PRIVATE).edit();
@@ -161,12 +157,10 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                 // Granted
                 LogUtils.i("已授权shizuku");
                 ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-                textview.setText("已授权");
-                ttextView.setText("Shizuku 服务正在运行");
+                textview.setText("已授权Shizuku");
                 imageView.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
-                imageView2.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
                 textview2.setVisibility(View.GONE);
-                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+                startActivity(intent);
             } else {
                     // Request the permission
                     new AlertDialog.Builder(this)
@@ -213,8 +207,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                     break;
             }
         }
-
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 
