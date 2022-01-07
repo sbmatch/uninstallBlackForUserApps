@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -39,6 +40,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
@@ -47,6 +49,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.BarUtils;
+import com.blankj.utilcode.util.ColorUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.PermissionUtils;
@@ -76,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private SharedPreferences sp;
     private SharedPreferences.Editor editor;
     private mViewModel viewModel;
-    private ImageView imageView;
+    private ImageView imageView ,imageView2;
     private Button button;
-    private CardView cardView;
-    private TextView textview,textview2;
+    private CardView cardView,cardView2;
+    private TextView textview,textview2,ttextView,ttextView2;
     private  IBinder iBinder ;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
@@ -92,18 +95,29 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
         intent = new Intent(this, SettingActivity.class);
         cardView = findViewById(R.id.cardview);
+        cardView2 = findViewById(R.id.cardview2);
         imageView = findViewById(R.id.imageview);
+        imageView2 = findViewById(R.id.imageview2);
         textview= findViewById(R.id.tv);
         textview2 = findViewById(R.id.tv2);
+        ttextView = findViewById(R.id.tvv);
+        ttextView2 = findViewById(R.id.tvv2);
 
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = getSharedPreferences("StartSate",MODE_PRIVATE).edit();
 
         viewModel = new ViewModelProvider(this).get(mViewModel.class);
 
+
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
         checkShizukuStat();
+
+        //checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
 
         /*if (sp != null) {
             if (!sp.getBoolean("start",false)) {
@@ -148,13 +162,12 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                 LogUtils.i("已授权shizuku");
                 ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
                 textview.setText("已授权");
-                imageView.setImageResource(R.drawable.ic_twotone_done_24);
+                ttextView.setText("Shizuku 服务正在运行");
+                imageView.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
+                imageView2.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
                 textview2.setVisibility(View.GONE);
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-                //startActivity(new Intent(this,SettingActivity.class));
             } else {
-
-                if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
                     // Request the permission
                     new AlertDialog.Builder(this)
                             .setCancelable(false)
@@ -166,9 +179,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                             .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
                                 LogUtils.i(dialog.toString());
                             }).show();
-                }else {
-                    checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-                }
             }
 
         }catch (IllegalStateException e){
@@ -324,12 +334,10 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
         if (grantResult == 0){
             LogUtils.i("太好了，授权完成");
-            //editor.putBoolean("start", true).commit();
             textview.setText("已授权");
             imageView.setImageResource(R.drawable.ic_twotone_done_24);
             textview2.setVisibility(View.GONE);
             checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-            // startActivity(intent);
         }else {
 
             try {
@@ -341,14 +349,10 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                             Shizuku.requestPermission(REQUEST_CODE);
                         })
                         .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                            /*editor.putBoolean("start", false).commit();
-                            AppUtils.uninstallApp(getPackageName());
-                            AppUtils.exitApp();*/
                             viewModel.add("未授权");
                             ToastUtils.showShort("好的，我们尊重您的决定");
-
-
                         }).show();
+
             }catch (Exception e2){
                 LogUtils.e(e2.fillInStackTrace());
             }

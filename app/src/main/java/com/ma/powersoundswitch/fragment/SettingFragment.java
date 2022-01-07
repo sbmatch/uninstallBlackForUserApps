@@ -93,9 +93,6 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         p4.setOnPreferenceClickListener(this);
         p5.setOnPreferenceClickListener(this);
 
-
-        p3.setSelectable(false);
-
         sp = requireContext().getSharedPreferences("status",MODE_PRIVATE);
         editor = requireContext().getSharedPreferences("status",MODE_PRIVATE).edit();
 

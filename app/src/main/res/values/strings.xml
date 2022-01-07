@@ -21,4 +21,6 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="status">状态</string>
+    <string name="shizukuRunStatus">Shizuku 服务没有运行</string>
+    <string name="shizuku_GrantStatus">Shizuku 没有授权</string>
 </resources>
