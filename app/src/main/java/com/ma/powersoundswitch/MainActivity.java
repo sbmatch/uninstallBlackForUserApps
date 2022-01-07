@@ -141,7 +141,8 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     {
         if (ContextCompat.checkSelfPermission(getBaseContext(),permission) != 0) {
             LogUtils.e(permission+" 未授权");
-            checkShizukuStat();
+            //checkShizukuStat();
+            startActivity(intent);
         }else {
             LogUtils.i("已获授权: "+permission);
             editor.putBoolean("start", true).commit();
@@ -156,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
                 LogUtils.i("已授权shizuku");
-                ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
+                //ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
                 textview.setText("已授权Shizuku");
                 imageView.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
                 textview2.setVisibility(View.GONE);
@@ -329,8 +330,9 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             textview.setText("已授权");
             imageView.setImageResource(R.drawable.ic_twotone_done_24);
             textview2.setVisibility(View.GONE);
+            //ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
             checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-        }else {
+               }else {
 
             try {
                 new AlertDialog.Builder(this)

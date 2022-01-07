@@ -117,9 +117,9 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             //LogUtils.e("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false) ;
         }
 
-        if (ContextCompat.checkSelfPermission(requireContext(),Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
+       /* if (ContextCompat.checkSelfPermission(requireContext(),Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
             p1.setEnabled(false);
-        }
+        }*/
 
     }
 
@@ -135,7 +135,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
         ShellUtils.execCmd("/system/bin/chmod 777 "+PathUtils.getInternalAppDataPath()+"/files/rish",false);
         //Ops检查权限状态(AppOpsManager.permissionToOp(Manifest.permission.WRITE_SECURE_SETTINGS));
-        //checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+        checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
     }
 
 
@@ -167,7 +167,6 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
             editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
         }else {
-            p1.setEnabled(true);
             editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
             LogUtils.i("已备份默认数据"+sp.getString("low_battery_sound",""));
             p2.setSummary("当前是系统默认值");
