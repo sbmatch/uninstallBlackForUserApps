@@ -83,7 +83,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private  IBinder iBinder ;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
-    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCenter.start(getApplication(), "b5f71581-37c7-42a2-b631-45a8a56a17df", Analytics.class, Crashes.class);
@@ -128,30 +127,15 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
     }
 
-    private int checkPermissionStatus(String permission) throws RemoteException //调用ops权限管理器校验权限是否真的授权
+    private int checkPermissionStatus(String permission) //调用权限管理器校验权限是否真的授权
     {
         if (ContextCompat.checkSelfPermission(getBaseContext(),permission) != 0) {
             LogUtils.e(permission+" 未授权");
-            ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-
+            checkShizukuStat();
         }else {
             LogUtils.i("已获授权: "+permission);
             editor.putBoolean("start", true).commit();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    startActivity(intent);
-                }
-            }).start();
-
-            //iBinder =  new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar"));
-            //LogUtils.e(iBinder.getInterfaceDescriptor() +"\n");
-
+            startActivity(intent);
         }
         return ContextCompat.checkSelfPermission(getBaseContext(),permission);
     }
@@ -162,26 +146,32 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
                 LogUtils.i("已授权shizuku");
+                ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
                 textview.setText("已授权");
                 imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                textview2.setHint(null);
+                textview2.setVisibility(View.GONE);
                 checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
                 //startActivity(new Intent(this,SettingActivity.class));
             } else {
-                // Request the permission
-                new AlertDialog.Builder(this)
-                        .setCancelable(false)
-                        .setTitle("权限申请")
-                        .setMessage("要授权 Shizuku 吗")
-                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
-                            Shizuku.requestPermission(REQUEST_CODE);
-                        })
-                        .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                            LogUtils.i(dialog.toString());
-                        }).show();
+
+                if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
+                    // Request the permission
+                    new AlertDialog.Builder(this)
+                            .setCancelable(false)
+                            .setTitle("权限申请")
+                            .setMessage("要授权 Shizuku 吗")
+                            .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
+                                Shizuku.requestPermission(REQUEST_CODE);
+                            })
+                            .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
+                                LogUtils.i(dialog.toString());
+                            }).show();
+                }else {
+                    checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
+                }
             }
 
-        }catch (IllegalStateException | RemoteException e){
+        }catch (IllegalStateException e){
             LogUtils.e(e.fillInStackTrace());
             new AlertDialog.Builder(this)
                     .setCancelable(false)
@@ -337,13 +327,8 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             //editor.putBoolean("start", true).commit();
             textview.setText("已授权");
             imageView.setImageResource(R.drawable.ic_twotone_done_24);
-            textview2.setHint(null);
-
-            try {
-                checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            textview2.setVisibility(View.GONE);
+            checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
             // startActivity(intent);
         }else {
 
