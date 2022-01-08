@@ -196,7 +196,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                     });
                 })
                 .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                    LogUtils.i(dialog.toString());
                 }).show();
     }
 }
