@@ -171,7 +171,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 @Override
                 public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
                     mRewardedAd = rewardedAd;
-                    mDialog("广告","如果您点击确定将会播放几秒钟的广告，之后将会发现浪费了几秒钟时间");
+                    mDialog("广告","如果您点击确定将会播放几秒钟的广告\n之后会发现刚刚浪费了几秒钟时间");
                     super.onAdLoaded(rewardedAd);
                 }
             });
