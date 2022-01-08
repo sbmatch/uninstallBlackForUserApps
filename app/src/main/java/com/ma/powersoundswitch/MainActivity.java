@@ -211,19 +211,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void AtDialog(String title, String msg) {
-        new AlertDialog.Builder(this)
-                .setCancelable(false)
-                .setTitle(title)
-                .setMessage(msg)
-                .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
-                    //Shizuku.requestPermission(REQUEST_CODE);
-                })
-                .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                    LogUtils.i(dialog.toString());
-                }).show();
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
