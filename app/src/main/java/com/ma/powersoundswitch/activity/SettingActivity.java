@@ -66,6 +66,19 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             }
         });
 
+       /* TTAdSdk.init(this, new TTAdConfig.Builder().appId("5261678").allowShowNotify(false).asyncInit(true).supportMultiProcess(true).directDownloadNetworkType(TTAdConstant.NETWORK_STATE_WIFI).build(), new TTAdSdk.InitCallback() {
+            @Override
+            public void success() {
+                LogUtils.e("完成初始化");
+            }
+
+            @Override
+            public void fail(int i, String s) {
+
+            }
+        });*/
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.setting);
 
@@ -163,15 +176,17 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             RewardedAd.load(this, adTestId, adRequest, new RewardedAdLoadCallback() {
                 @Override
                 public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    LogUtils.e(loadAdError.getResponseInfo());
-                    mDialog("广告加载失败", Objects.requireNonNull(loadAdError.getResponseInfo()).toString());
+                    LogUtils.e("错误代码："+loadAdError.getCode() +"\n："+loadAdError.getMessage());
+                    //mDialog("广告加载失败","错误代码："+loadAdError.getCode() +"\n\n"+loadAdError.getMessage());
+                    ToastUtils.showLong("\nGoogle广告加载失败\n\n" +loadAdError.getMessage()+"\n\n正在加载穿山甲广告\n");
+                   // 穿山甲();
                     super.onAdFailedToLoad(loadAdError);
                 }
 
                 @Override
                 public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
                     mRewardedAd = rewardedAd;
-                    mDialog("广告","如果您点击确定将会播放几秒钟的广告\n之后会发现刚刚浪费了几秒钟时间");
+                    mDialog("广告","点击确定将会播放广告, 这将浪费你几秒时间");
                     super.onAdLoaded(rewardedAd);
                 }
             });
@@ -181,6 +196,45 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         return super.onOptionsItemSelected(item);
     }
+/*
+
+    private void 穿山甲() {
+
+        TTAdNative mTTAdNative=TTAdSdk.getAdManager().createAdNative(this);
+        AdSlot adSlot = new AdSlot.Builder()
+                .setCodeId(String.valueOf(947626923))
+                .setRewardName("广告") //奖励的名称 选填
+                .setRewardAmount(1)  //奖励的数量 选填
+                .setUserID("test1")//tag_id
+                .setMediaExtra("media_extra") //附加参数
+                .setOrientation(TTAdConstant.VERTICAL) //必填参数，期望视频的播放方向：TTAdConstant.HORIZONTAL 或 TTAdConstant.VERTICAL
+                .setAdLoadType(TTAdLoadType.PRELOAD)//推荐使用，用于标注此次的广告请求用途为预加载（当做缓存）还是实时加载，方便后续为开发者优化相关策略
+                .build();
+
+        mTTAdNative.loadRewardVideoAd(adSlot, new TTAdNative.RewardVideoAdListener() {
+            @Override
+            public void onError(int i, String s) {
+
+            }
+
+            @Override
+            public void onRewardVideoAdLoad(TTRewardVideoAd ttRewardVideoAd) {
+                ttRewardVideoAd.showRewardVideoAd(SettingActivity.this,TTAdConstant.RitScenes.HOME_OPEN_BONUS, "scenes_test");
+
+            }
+
+            @Override
+            public void onRewardVideoCached() {
+
+            }
+
+            @Override
+            public void onRewardVideoCached(TTRewardVideoAd ttRewardVideoAd) {
+
+            }
+        });
+    }
+*/
 
     private void mDialog(String title, String msg) {
         new AlertDialog.Builder(this)
@@ -188,12 +242,24 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 .setTitle(title)
                 .setMessage(msg)
                 .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
-                    mRewardedAd.show(getParent(), new OnUserEarnedRewardListener() {
-                        @Override
-                        public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
-                            ToastUtils.showShort("观看广告(1/1) 已完成");
+
+                    try {
+
+                    if (mRewardedAd.getResponseInfo().getResponseId() != null) {
+                            mRewardedAd.show(getParent(), new OnUserEarnedRewardListener() {
+                                @Override
+                                public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
+                                    ToastUtils.showShort("观看广告(1/1) 已完成");
+                                }
+                            });
+
+                    }else {
+                        ToastUtils.showShort(mRewardedAd.getResponseInfo().getResponseId());
                         }
-                    });
+                    }catch (NullPointerException e){
+                        LogUtils.e(e.fillInStackTrace());
+                        //ToastUtils.showShort(e.fillInStackTrace().toString());
+                    }
                 })
                 .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
                 }).show();
