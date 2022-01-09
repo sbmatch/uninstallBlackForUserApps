@@ -16,6 +16,10 @@
     <string name="power_sound">充电提示音</string>
     <string name="low_battery_sound">低电量提示音</string>
     <string name="low_battery_sound_path">自定义低电量提示音</string>
+    <string name="lock_sound">锁屏提示音</string>
+    <string name="unlock_sound">解锁提示音</string>
+    <string name="lock_sound_path">自定义锁屏提示音</string>
+    <string name="unlock_sound_path">自定义解锁提示音</string>
     <string name="appcenter">发送错误报告</string>
     <string name="acinfo">AppCenter</string>
     <string name="hello_first_fragment">Hello first fragment</string>

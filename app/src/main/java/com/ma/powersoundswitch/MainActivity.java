@@ -319,7 +319,8 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             textview2.setVisibility(View.GONE);
             //ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
             checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-               }else {
+
+        }else {
 
             try {
                 new AlertDialog.Builder(this)

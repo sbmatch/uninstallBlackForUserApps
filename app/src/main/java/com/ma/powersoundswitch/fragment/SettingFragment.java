@@ -29,6 +29,7 @@ import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.ClickUtils;
 import com.blankj.utilcode.util.ClipboardUtils;
+import com.blankj.utilcode.util.DeviceUtils;
 import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
@@ -63,7 +64,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
     private ContentResolver cr;
 
-    private Preference p,p1,p2,p3,p4,p5;
+    private Preference about,AppCanter,开源,电源音,低电量音,自定义低电量音路径,锁屏音,锁屏音路径,解锁音,解锁音路径;
 
     private SharedPreferences sp;
     private SharedPreferences.Editor editor;
@@ -78,20 +79,28 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         super.onCreate(savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(mViewModel.class); // 实例化发送端
 
-        p = findPreference("about");
-        p1 =findPreference("power_sound");
-        p2 = findPreference("low_battery_sound");
-        p3 =findPreference("appcanter");
-        p4 = findPreference("opensource");
-        p5 = findPreference("low_battery_sound_path");
+        about = findPreference("about");
+        AppCanter =findPreference("appcanter");
+        开源 = findPreference("opensource");
+        电源音 =findPreference("power_sound");
+        低电量音 = findPreference("low_battery_sound");
+        自定义低电量音路径 = findPreference("low_battery_sound_path");
+        锁屏音 = findPreference("lock_sound");
+        锁屏音路径 = findPreference("lock_sound_path");
+        解锁音 = findPreference("unlock_sound");
+        解锁音路径 = findPreference("unlock_sound_path");
 
 
-        p.setOnPreferenceClickListener(this);
-        p1.setOnPreferenceChangeListener(this);
-        p2.setOnPreferenceChangeListener(this);
-        p3.setOnPreferenceChangeListener(this);
-        p4.setOnPreferenceClickListener(this);
-        p5.setOnPreferenceClickListener(this);
+        about.setOnPreferenceClickListener(this);
+        AppCanter.setOnPreferenceChangeListener(this);
+        开源.setOnPreferenceClickListener(this);
+        电源音.setOnPreferenceChangeListener(this);
+        低电量音.setOnPreferenceChangeListener(this);
+        自定义低电量音路径.setOnPreferenceClickListener(this);
+        锁屏音.setOnPreferenceChangeListener(this);
+        锁屏音路径.setOnPreferenceClickListener(this);
+        解锁音.setOnPreferenceChangeListener(this);
+        解锁音路径.setOnPreferenceClickListener(this);
 
         sp = requireContext().getSharedPreferences("status",MODE_PRIVATE);
         editor = requireContext().getSharedPreferences("status",MODE_PRIVATE).edit();
@@ -117,9 +126,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
             //LogUtils.e("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false) ;
         }
 
-       /* if (ContextCompat.checkSelfPermission(requireContext(),Manifest.permission.WRITE_SECURE_SETTINGS) != 0) {
-            p1.setEnabled(false);
-        }*/
+        saveConfigInfo(); //初始化系统默认值
 
     }
 
@@ -165,16 +172,22 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         if (ContextCompat.checkSelfPermission(requireContext(),permission) != 0) {
             LogUtils.e(permission+" 未授权");
             ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-            editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
         }else {
-            editor.putString("low_battery_sound",Settings.Global.getString(cr, "low_battery_sound")).commit();
-            LogUtils.i("已备份默认数据"+sp.getString("low_battery_sound",""));
-            p2.setSummary("当前是系统默认值");
+            LogUtils.i("已备份默认数据"+sp.getAll());
         }
         return ContextCompat.checkSelfPermission(requireContext(),permission);
     }
 
 
+    private void saveConfigInfo(){
+        switch (RomUtils.getRomInfo().getName()){
+            case "xiaomi":
+                editor.putString("low_battery_sound_path","/system/media/audio/ui/LowBattery.ogg").commit();
+                editor.putString("lock_sound_path","/system/media/audio/ui/Lock.ogg").commit();
+                editor.putString("unlock_sound_path","/system/media/audio/ui/Unlock.ogg").commit();
+                break;
+        }
+    }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -190,13 +203,33 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     public boolean onPreferenceClick(Preference preference) {
         switch (preference.getKey()){
             case "low_battery_sound_path":
-                Intent i = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(i, 66);
+                ToastUtils.showShort("请选择ogg格式文件");
+                startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE), 66);
                 viewModel.getCallString().observe(this, s -> {
-                    p2.setSummary(s);
-                    p2.setDefaultValue("true");
-                        Settings.Global.putString(cr, "low_battery_sound",s);
-                        ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                    自定义低电量音路径.setSummary(s);
+                    //p2.setDefaultValue("true");
+                    Settings.Global.putString(cr, "low_battery_sound",s);
+                    ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                });
+                break;
+            case "lock_sound_path":
+                ToastUtils.showShort("请选择ogg格式文件");
+                startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE), 666);
+                viewModel.getCallString().observe(this, s -> {
+                    锁屏音路径.setSummary(s);
+                   // p7.setDefaultValue("true");
+                    Settings.Global.putString(cr, "lock_sound",s);
+                    ToastUtils.showShort(getString(R.string.lock_sound) + "已设置为\n" + s);
+                });
+                break;
+            case "unlock_sound_path":
+                ToastUtils.showShort("请选择ogg格式文件");
+                startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE), 6666);
+                viewModel.getCallString().observe(this, s -> {
+                    解锁音路径.setSummary(s);
+                    //p9.setDefaultValue("true");
+                    Settings.Global.putString(cr, "unlock_sound",s);
+                    ToastUtils.showShort(getString(R.string.unlock_sound) + "已设置为\n" + s);
                 });
                 break;
             case "opensource":
@@ -236,24 +269,57 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                                 Settings.Global.putInt(cr, "power_sounds_enabled", 0);
                                 //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"settings put global power_sounds_enabled 0\" &",false);
                             }
-
                         LogUtils.e("电源音状态：" + Settings.Global.getString(cr, "power_sounds_enabled"));
                         break;
                     case "low_battery_sound":
                         LogUtils.i(preference.getKey()+" is "+newValue);
                         if (((boolean) newValue)) {
                             ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + Settings.Global.getString(cr, "low_battery_sound"));
-
-                            viewModel.getCallString().observe(this, s -> {
+                            /*viewModel.getCallString().observe(this, s -> {
                                 Settings.Global.putString(cr, "low_battery_sound", s);
                                 p2.setSummary(s);
                                 ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
-                            });
+                            });*/
+                            自定义低电量音路径.setSummary(Settings.Global.getString(cr, "low_battery_sound"));
 
                         }else {
                             Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound",""));
-                            p2.setSummary("当前是系统默认值");
+                            自定义低电量音路径.setSummary("当前是系统默认值");
                             ToastUtils.showShort("已恢复为默认值");
+                        }
+                        break;
+                    case "lock_sound":
+                        LogUtils.i(preference.getKey()+" is "+newValue);
+                        if (((boolean) newValue)) {
+
+                            ToastUtils.showShort(getString(R.string.lock_sound) + "已设置为\n" + Settings.Global.getString(cr, "lock_sound"));
+                            锁屏音路径.setSummary(Settings.Global.getString(cr, "lock_sound"));
+
+                        }else {
+                            Settings.Global.putString(cr, "lock_sound",sp.getString("lock_sound_path",""));
+                            锁屏音路径.setSummary("当前是系统默认值");
+                            ToastUtils.showShort("已恢复为默认值");
+                            LogUtils.i("已恢复为默认值"+sp.getString("lock_sound_path",""));
+                        }
+                        break;
+                    case "unlock_sound":
+                        LogUtils.i(preference.getKey()+" is "+newValue);
+                        if (((boolean) newValue)) {
+
+                            ToastUtils.showShort(getString(R.string.lock_sound) + "已设置为\n" + Settings.Global.getString(cr, "unlock_sound"));
+                            解锁音路径.setSummary(Settings.Global.getString(cr, "unlock_sound"));
+
+                            /*viewModel.getCallString().observe(this, s -> {
+                                Settings.Global.putString(cr, "unlock_sound", s);
+                                p9.setSummary(s);
+                                ToastUtils.showShort(getString(R.string.low_battery_sound) + "已设置为\n" + s);
+                            });*/
+
+                        }else {
+                            Settings.Global.putString(cr, "unlock_sound",sp.getString("unlock_sound_path",""));
+                            解锁音路径.setSummary("当前是系统默认值");
+                            ToastUtils.showShort("已恢复为默认值");
+                            LogUtils.i("已恢复为默认值"+sp.getString("unlock_sound",""));
                         }
                         break;
                     case "appcanter":
