@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.app.Service;
 import android.app.StatusBarManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,6 +54,7 @@ import com.blankj.utilcode.util.ColorUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.PermissionUtils;
+import com.blankj.utilcode.util.ReflectUtils;
 import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ToastUtils;
@@ -64,9 +66,13 @@ import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
 import java.io.FileDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuService;
 import rikka.shizuku.Shizuku;
+import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.ShizukuBinderWrapper;
 import rikka.shizuku.SystemServiceHelper;
 
@@ -84,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private CardView cardView,cardView2;
     private TextView textview,textview2,ttextView,ttextView2;
     private  IBinder iBinder ;
+    private StatusBarManager mStatusBarManager;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
     @Override
@@ -162,6 +169,20 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                 imageView.setImageResource(R.drawable.ic_baseline_emoji_emotions_24);
                 textview2.setVisibility(View.GONE);
                 startActivity(intent);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                   mStatusBarManager = (StatusBarManager) getSystemService("statusbar");
+                    try {
+                        Class<?> statusBarManager = Class.forName(mStatusBarManager.getClass().getName());
+                       // Method method = statusBarManager.getMethod("setIconVisibility");
+                       LogUtils.e(ReflectUtils.reflect(statusBarManager).method("removeIcon").newInstance().get());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        LogUtils.e(e.fillInStackTrace());
+                    }
+                }
+
+
             } else {
                     // Request the permission
                     new AlertDialog.Builder(this)

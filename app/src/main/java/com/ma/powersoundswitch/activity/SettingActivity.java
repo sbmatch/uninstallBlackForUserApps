@@ -1,12 +1,16 @@
 package com.ma.powersoundswitch.activity;
 
 import android.app.AlertDialog;
+import android.app.StatusBarManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +28,7 @@ import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FragmentUtils;
 import com.blankj.utilcode.util.LogUtils;
+import com.blankj.utilcode.util.ReflectUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
@@ -46,7 +51,17 @@ import com.microsoft.appcenter.crashes.Crashes;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+
+import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuService;
+import moe.shizuku.server.IShizukuServiceConnection;
+import rikka.shizuku.Shizuku;
+import rikka.shizuku.ShizukuBinderWrapper;
+import rikka.shizuku.SystemServiceHelper;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private FragmentManager fm;
@@ -98,6 +113,22 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         viewModel = new ViewModelProvider(this).get(mViewModel.class);
 
+        IBinder iBinder = (new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar")));
+        Bundle bundle = new Bundle();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                StatusBarManager mStatusBarManager = (StatusBarManager) getSystemService("statusbar");
+                LogUtils.i(mStatusBarManager.getClass().getName());
+                List arrayList = Arrays.asList(Arrays.stream(mStatusBarManager.getClass().getDeclaredMethods()).toArray());
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int i = 0; i<arrayList.size();i++){
+                    stringBuilder.append(arrayList.get(i)+"\n\n");
+                }
+                mDialog(mStatusBarManager.getClass().getSimpleName()+"类所有方法",stringBuilder.toString());
+            } catch (NullPointerException n) {
+                mDialog(null, n.fillInStackTrace().toString());
+            }
+        }
     }
 
     @Override
@@ -147,6 +178,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     public boolean onMenuOpened(int featureId, @NonNull Menu menu) {
 
         if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")) {
+
             try {
                 Method method = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
                 method.setAccessible(true);
@@ -178,7 +210,8 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                     LogUtils.e("错误代码："+loadAdError.getCode() +"\n："+loadAdError.getMessage());
                     //mDialog("广告加载失败","错误代码："+loadAdError.getCode() +"\n\n"+loadAdError.getMessage());
-                    ToastUtils.showLong("\nGoogle广告加载失败\n\n" +loadAdError.getMessage()+"\n\n正在加载穿山甲广告\n");
+                    ToastUtils.showLong("Google广告加载失败\n\n"+loadAdError.getMessage());
+                    //ToastUtils.showShort("\n\n正在加载穿山甲广告\n");
                    // 穿山甲();
                     super.onAdFailedToLoad(loadAdError);
                 }
@@ -244,7 +277,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
 
                     try {
-
                     if (mRewardedAd.getResponseInfo().getResponseId() != null) {
                             mRewardedAd.show(getParent(), new OnUserEarnedRewardListener() {
                                 @Override

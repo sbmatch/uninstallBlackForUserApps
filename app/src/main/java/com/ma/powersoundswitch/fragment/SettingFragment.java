@@ -185,7 +185,17 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 editor.putString("low_battery_sound_path","/system/media/audio/ui/LowBattery.ogg").commit();
                 editor.putString("lock_sound_path","/system/media/audio/ui/Lock.ogg").commit();
                 editor.putString("unlock_sound_path","/system/media/audio/ui/Unlock.ogg").commit();
+                LogUtils.i("已适配"+RomUtils.getRomInfo().getName());
                 break;
+            default:
+                ToastUtils.showShort("抱歉，本应用仅适配了"+RomUtils.getRomInfo().getName()+"\n\n可联系开发者申请适配");
+                LogUtils.e("当前设备未适配："+RomUtils.getRomInfo().getName());
+                低电量音.setEnabled(false);
+                自定义低电量音路径.setEnabled(false);
+                锁屏音.setEnabled(false);
+                锁屏音路径.setEnabled(false);
+                解锁音.setEnabled(false);
+                解锁音路径.setEnabled(false);
         }
     }
 
@@ -283,7 +293,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                             自定义低电量音路径.setSummary(Settings.Global.getString(cr, "low_battery_sound"));
 
                         }else {
-                            Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound",""));
+                            Settings.Global.putString(cr, "low_battery_sound",sp.getString("low_battery_sound_path",""));
                             自定义低电量音路径.setSummary("当前是系统默认值");
                             ToastUtils.showShort("已恢复为默认值");
                         }
