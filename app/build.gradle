@@ -44,9 +44,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:20.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
 
-    //implementation 'com.huawei.agconnect:agconnect-core:1.6.2.300'
     implementation 'com.huawei.agconnect:agconnect-crash:1.6.2.300'
     //implementation 'com.huawei.agconnect:agconnect-crash-native:1.6.2.300'
+
+    implementation 'org.apache.commons:commons-lang3:3.11'
 
     //implementation 'com.pangle.cn:ads-sdk-pro:4.0.1.9' //穿山甲
 

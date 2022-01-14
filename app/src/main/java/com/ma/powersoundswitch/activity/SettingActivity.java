@@ -1,28 +1,46 @@
 package com.ma.powersoundswitch.activity;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.StatusBarManager;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.DataSetObserver;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
+import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
@@ -41,18 +59,18 @@ import com.google.android.gms.ads.initialization.OnInitializationCompleteListene
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
-import com.ma.powersoundswitch.ContentUriUtil;
 import com.ma.powersoundswitch.R;
-import com.ma.powersoundswitch.fragment.SettingFragment;
-import com.ma.powersoundswitch.mViewModel;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
+
+import org.apache.commons.lang3.ClassUtils;
 
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -66,11 +84,15 @@ import rikka.shizuku.SystemServiceHelper;
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private FragmentManager fm;
     private FragmentTransaction transition;
-    private mViewModel viewModel;
+    //private mViewModel viewModel;
     private RewardedAd mRewardedAd;
     private final static String adTestId = "ca-app-pub-3940256099942544/5224354917";
     private final static String adId = "ca-app-pub-6149360771976686~7073426268";
     private final String TAG = "SettingActivity";
+    private View view;
+    private androidx.appcompat.app.AlertDialog.Builder builder;
+    private TextView textView;
+    private ListView vv;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -111,35 +133,38 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         FragmentUtils.add(fm,new SettingFragment(),R.id.fragmentContainerView);
         FragmentUtils.show(fm);
 
-        viewModel = new ViewModelProvider(this).get(mViewModel.class);
+       // viewModel = new ViewModelProvider(this).get(mViewModel.class);
+
+
+        view = View.inflate(getBaseContext(),R.layout.dialog,null);
+        textView = view.findViewById(R.id.textView1);
+
+        setTextViewFlag(textView);
 
         IBinder iBinder = (new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar")));
         Bundle bundle = new Bundle();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            try {
-                StatusBarManager mStatusBarManager = (StatusBarManager) getSystemService("statusbar");
-                LogUtils.i(mStatusBarManager.getClass().getName());
-                List arrayList = Arrays.asList(Arrays.stream(mStatusBarManager.getClass().getDeclaredMethods()).toArray());
-                StringBuilder stringBuilder = new StringBuilder();
-                for (int i = 0; i<arrayList.size();i++){
-                    stringBuilder.append(arrayList.get(i)+"\n\n");
-                }
-                mDialog(mStatusBarManager.getClass().getSimpleName()+"类所有方法",stringBuilder.toString());
-            } catch (NullPointerException n) {
-                mDialog(null, n.fillInStackTrace().toString());
-            }
-        }
+
+    }
+
+    private void setTextViewFlag(TextView textView) {
+        textView.setTypeface(Typeface.DEFAULT_BOLD);
+        textView.setFocusable(true);
+        textView.setTextIsSelectable(true);
+        textView.setLongClickable(true);
+        //textView.setMovementMethod(ScrollingMovementMethod.getInstance());
+        textView.setEnabled(true);
+        textView.getPaint().setFlags(Paint.ANTI_ALIAS_FLAG);
     }
 
     @Override
     public void onClick(View v) {
-
+        LogUtils.i(v.getId());
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (resultCode == RESULT_OK) {
-            viewModel.add(ContentUriUtil.getPath(this,data.getData()));
+            //viewModel.add(ContentUriUtil.getPath(this,data.getData()));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -170,6 +195,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         // Inflate the menu; this adds items to the action bar if it is present.
         // getMenuInflater().inflate(R.menu.menu_main, menu);
         menu.add(0,1,0,"展示广告").setIcon(R.drawable.ic_baseline_card_giftcard_24);
+        menu.add(0,2,0,"系统类信息").setIcon(R.drawable.ic_baseline_card_giftcard_24);
         return true;
     }
 
@@ -178,7 +204,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     public boolean onMenuOpened(int featureId, @NonNull Menu menu) {
 
         if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")) {
-
             try {
                 Method method = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
                 method.setAccessible(true);
@@ -227,7 +252,42 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+
+        if (id == 2){
+            try {
+
+                Object systemService = getSystemService(Context.AUDIO_SERVICE);
+
+                List list = Arrays.asList(Arrays.stream(systemService.getClass().getDeclaredMethods()).toArray());
+
+                view  = View.inflate(getBaseContext(),R.layout.dialog,null);
+                vv = view.findViewById(R.id.listview);
+                ListAdapter listAdapter = new ArrayAdapter<Objects>(getBaseContext(),R.layout.dialog,R.id.textView1,list);
+                vv.setAdapter(listAdapter);
+                mAtDialog(systemService.getClass().getSimpleName()+"所有方法",view);
+
+            } catch (NullPointerException n) {
+                n.fillInStackTrace();
+                ToastUtils.showShort(n.getMessage());
+                LogUtils.e(n.fillInStackTrace());
+            }
+        }
+
+            return super.onOptionsItemSelected(item);
+    }
+
+    private void mAtDialog(String systemService,View view) {
+        builder = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setCancelable(false)
+                .setView(view)
+                .setTitle(systemService)
+                .setNegativeButton(R.string.lab_submit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+        Dialog dialog = builder.show();
+        dialog.show();
     }
 /*
 

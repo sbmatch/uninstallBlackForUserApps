@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                     try {
                         Class<?> statusBarManager = Class.forName(mStatusBarManager.getClass().getName());
                        // Method method = statusBarManager.getMethod("setIconVisibility");
-                       LogUtils.e(ReflectUtils.reflect(statusBarManager).method("removeIcon").newInstance().get());
+                      // LogUtils.e(ReflectUtils.reflect(statusBarManager).method("removeIcon").newInstance().get());
                     } catch (Exception e) {
                         e.printStackTrace();
                         LogUtils.e(e.fillInStackTrace());
