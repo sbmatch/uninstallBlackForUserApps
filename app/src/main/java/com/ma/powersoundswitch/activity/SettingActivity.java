@@ -60,6 +60,8 @@ import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.ma.powersoundswitch.R;
+import com.ma.powersoundswitch.fragment.SettingFragment;
+import com.ma.powersoundswitch.fragment.mViewModel;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
@@ -74,17 +76,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import moe.shizuku.server.IRemoteProcess;
-import moe.shizuku.server.IShizukuService;
-import moe.shizuku.server.IShizukuServiceConnection;
-import rikka.shizuku.Shizuku;
 import rikka.shizuku.ShizukuBinderWrapper;
 import rikka.shizuku.SystemServiceHelper;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
     private FragmentManager fm;
     private FragmentTransaction transition;
-    //private mViewModel viewModel;
+    private mViewModel viewModel;
     private RewardedAd mRewardedAd;
     private final static String adTestId = "ca-app-pub-3940256099942544/5224354917";
     private final static String adId = "ca-app-pub-6149360771976686~7073426268";
@@ -124,7 +122,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(false);
         actionBar.setHomeButtonEnabled(true);
-        actionBar.setTitle("设置");
+        actionBar.setTitle(AppUtils.getAppName());
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         fm = getSupportFragmentManager();
@@ -164,7 +162,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (resultCode == RESULT_OK) {
-            //viewModel.add(ContentUriUtil.getPath(this,data.getData()));
+            viewModel.add(ContentUriUtil.getPath(this,data.getData()));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

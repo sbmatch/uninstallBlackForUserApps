@@ -1,44 +1,32 @@
 package com.ma.powersoundswitch.fragment;
 
+
 import static android.content.Context.MODE_PRIVATE;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.StatusBarManager;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import com.blankj.utilcode.util.ActivityUtils;
-import com.blankj.utilcode.util.AppUtils;
-import com.blankj.utilcode.util.ClickUtils;
-import com.blankj.utilcode.util.ClipboardUtils;
-import com.blankj.utilcode.util.DeviceUtils;
 import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
-import com.blankj.utilcode.util.ThreadUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.ma.powersoundswitch.R;
-import com.ma.powersoundswitch.mViewModel;
 import com.microsoft.appcenter.AppCenter;
 
 import java.io.File;
@@ -46,14 +34,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLConnection;
-import java.util.Objects;
-
-import rikka.shizuku.Shizuku;
-import rikka.shizuku.ShizukuApiConstants;
-import rikka.shizuku.ShizukuBinderWrapper;
-import rikka.shizuku.ShizukuSystemProperties;
-import rikka.shizuku.SystemServiceHelper;
 
 
 public class SettingFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceClickListener,Preference.OnPreferenceChangeListener {
@@ -77,6 +57,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         viewModel = new ViewModelProvider(requireActivity()).get(mViewModel.class); // 实例化发送端
 
         about = findPreference("about");

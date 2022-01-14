@@ -1,11 +1,10 @@
-package com.ma.powersoundswitch;
+package com.ma.powersoundswitch.fragment;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class mViewModel extends ViewModel {
-
     private MutableLiveData<String> callString = new MutableLiveData<>();
 
     public LiveData<String> getCallString()
@@ -21,5 +20,4 @@ public class mViewModel extends ViewModel {
     public void add(String str){
         callString.setValue(str);
     }
-
 }
