@@ -3,5 +3,12 @@
     <style name="Theme.MaterialComponents.Ma.Light" parent="Base.Theme.MaterialComponents.Light">
         <item name="android:fitsSystemWindows">true</item>
         <item name="android:windowTranslucentStatus">true</item>
+        <!-- 状态栏的颜色 -->
+        <item name="colorPrimary">@color/天蓝</item>
+        <!-- 一级文本的颜色 -->
+        <item name="colorPrimaryDark">@color/common_google_signin_btn_text_dark_focused</item>
+        <!-- 二级文本的颜色 -->
+        <item name="colorAccent">@color/浅粉色</item>
+
     </style>
 </resources>

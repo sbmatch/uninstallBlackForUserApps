@@ -63,11 +63,6 @@ import com.ma.powersoundswitch.R;
 import com.ma.powersoundswitch.fragment.SettingFragment;
 import com.ma.powersoundswitch.fragment.mViewModel;
 import com.microsoft.appcenter.AppCenter;
-import com.microsoft.appcenter.analytics.Analytics;
-import com.microsoft.appcenter.crashes.Crashes;
-
-import org.apache.commons.lang3.ClassUtils;
-
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -131,8 +126,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         FragmentUtils.add(fm,new SettingFragment(),R.id.fragmentContainerView);
         FragmentUtils.show(fm);
 
-       // viewModel = new ViewModelProvider(this).get(mViewModel.class);
-
+        viewModel = new ViewModelProvider(this).get(mViewModel.class);
 
         view = View.inflate(getBaseContext(),R.layout.dialog,null);
         textView = view.findViewById(R.id.textView1);
@@ -140,16 +134,15 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         setTextViewFlag(textView);
 
         IBinder iBinder = (new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar")));
-        Bundle bundle = new Bundle();
 
     }
+
 
     private void setTextViewFlag(TextView textView) {
         textView.setTypeface(Typeface.DEFAULT_BOLD);
         textView.setFocusable(true);
         textView.setTextIsSelectable(true);
         textView.setLongClickable(true);
-        //textView.setMovementMethod(ScrollingMovementMethod.getInstance());
         textView.setEnabled(true);
         textView.getPaint().setFlags(Paint.ANTI_ALIAS_FLAG);
     }

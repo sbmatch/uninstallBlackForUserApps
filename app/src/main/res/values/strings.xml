@@ -13,7 +13,7 @@
     <string name="other">其他</string>
     <string name="lab_cancel">取消</string>
     <string name="lab_submit">确定</string>
-    <string name="power_sound">充电提示音</string>
+    <string name="power_sound">电源提示音</string>
     <string name="low_battery_sound">低电量提示音</string>
     <string name="low_battery_sound_path">自定义低电量提示音</string>
     <string name="lock_sound">锁屏提示音</string>

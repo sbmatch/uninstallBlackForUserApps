@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="浅粉色">#FFB6C1</color>
+    <color name="深粉红色">#FF1493</color>
+    <color name="深绿色">#006400</color>
+    <color name="春绿色">#00FF7F</color>
+    <color name="柠檬绿">#32CD32</color>
+    <color name="天蓝">#08BFFF</color>
 </resources>

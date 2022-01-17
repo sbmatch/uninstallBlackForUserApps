@@ -9,6 +9,8 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 
+import com.blankj.utilcode.util.LogUtils;
+
 public class ContentUriUtil {
     /**
      * Get a file path from a Uri. This will get the the path for Storage Access
@@ -22,6 +24,8 @@ public class ContentUriUtil {
     public static String getPath(final Context context, final Uri uri) {
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        try {
 
         // DocumentProvider
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
@@ -82,7 +86,9 @@ public class ContentUriUtil {
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
-
+        }catch (NullPointerException e){
+            LogUtils.e(e.fillInStackTrace());
+        }
         return null;
     }
     /**

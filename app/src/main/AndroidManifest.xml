@@ -20,9 +20,6 @@
         android:theme="@style/Theme.MaterialComponents.Ma.Light"
         android:supportsRtl="true">
 
-        <service
-            android:name=".service.mService"/>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,6 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".activity.SettingActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
