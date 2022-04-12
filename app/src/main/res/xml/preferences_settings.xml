@@ -49,10 +49,17 @@
             app:icon="@drawable/ic_baseline_bug_report_24"/>
 
         <PreferenceScreen
+            android:key="bugreply"
+            android:icon="@drawable/ic_baseline_textsms_24"
+            android:title="用户反馈"
+            />
+
+        <PreferenceScreen
             android:key="opensource"
             app:icon="@drawable/ic_baseline_open_in_browser_24"
             app:title="@string/opensource">
         </PreferenceScreen>
+
 
         <PreferenceScreen
             android:key="about"

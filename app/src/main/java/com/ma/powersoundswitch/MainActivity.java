@@ -1,100 +1,71 @@
 package com.ma.powersoundswitch;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.app.Dialog;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.app.StatusBarManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 
 import android.os.IBinder;
-import android.os.IInterface;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.os.RemoteException;
-import android.provider.Settings;
-import android.view.Gravity;
+import android.os.PowerManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import com.blankj.utilcode.util.ActivityUtils;
 import com.blankj.utilcode.util.AppUtils;
-import com.blankj.utilcode.util.BarUtils;
-import com.blankj.utilcode.util.ColorUtils;
 import com.blankj.utilcode.util.FileUtils;
-import com.blankj.utilcode.util.FragmentUtils;
 import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.PermissionUtils;
-import com.blankj.utilcode.util.ReflectUtils;
 import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.ma.powersoundswitch.activity.ContentUriUtil;
 import com.ma.powersoundswitch.activity.SettingActivity;
-import com.ma.powersoundswitch.fragment.SettingFragment;
 import com.ma.powersoundswitch.fragment.mViewModel;
 import com.microsoft.appcenter.AppCenter;
 import com.microsoft.appcenter.analytics.Analytics;
 import com.microsoft.appcenter.crashes.Crashes;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
 
-import moe.shizuku.server.IRemoteProcess;
-import moe.shizuku.server.IShizukuService;
 import rikka.shizuku.Shizuku;
-import rikka.shizuku.ShizukuApiConstants;
 import rikka.shizuku.ShizukuBinderWrapper;
 import rikka.shizuku.SystemServiceHelper;
 
-public class MainActivity extends AppCompatActivity implements Shizuku.OnRequestPermissionResultListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements Shizuku.OnRequestPermissionResultListener{
 
     private Intent intent ;
     private Dialog dialog;
@@ -113,11 +84,13 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     private FragmentTransaction transition;
     private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER = this;
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCenter.start(getApplication(), "b5f71581-37c7-42a2-b631-45a8a56a17df", Analytics.class, Crashes.class);
         Utils.init(getApplication());
+        LogUtils.Config config = LogUtils.getConfig();
+        config.setLog2FileSwitch(true);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -140,20 +113,19 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
         ActionBar actionBar = getSupportActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
         textview.setTextSize(18);
 
         imageView.setImageResource(R.drawable.ic_baseline_priority_high_24);
-        textview.setText("写入安全设置"+"\r未授权");
+        textview.setText("写入安全设置权限未授权");
 
         fm = getSupportFragmentManager();
         transition = fm.beginTransaction();
 
-        FragmentUtils.add(fm,new SettingFragment(),R.id.fragmentContainerView);
-        FragmentUtils.show(fm);
-
+        //FragmentUtils.add(fm,new SettingFragment(),R.id.fragmentContainerView);
 
         /*if (sp != null) {
             if (!sp.getBoolean("start",false)) {
@@ -175,62 +147,32 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             }
         }*/
 
-        String cmd = "export PATH="+PathUtils.getInternalAppDataPath()+ "/files:"+"$PATH"+" " +
-                " && echo PATH环境变量: $PATH"+
-                " && cd "+PathUtils.getInternalAppDataPath()+ "/files"+
-                " && pwd && ls -l ";
+        String cmd ="cd "+PathUtils.getInternalAppDataPath()+ "/files";
 
         if (!FileUtils.isFileExists(PathUtils.getInternalAppDataPath()+"/files/rish")){
-            initRish(cmd);
+            initrish();
             LogUtils.i("File Not Fount: "+PathUtils.getInternalAppDataPath()+"/files/rish"+"\nBut We Are fixed it");
-        }else {
-            //checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
-           // checkShizukuStatus();
-            LogUtils.i(ShellUtils.execCmd(cmd,false).successMsg);
-            LogUtils.i("rish 已初始化");
         }
     }
 
-    private int checkPermissionStatus(String permission) //调用权限管理器校验权限是否真的授权
+    private int checkPermissionStatus(String permission) //校验权限授权状态
     {
-        LogUtils.i("正在校验 "+permission+" 权限授权状态");
-        return ContextCompat.checkSelfPermission(getBaseContext(),permission);
+         return ContextCompat.checkSelfPermission(getBaseContext(),permission);
     }
 
 
 
     private void checkShizukuStatus() {
+
         try {
 
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 // Granted
-                LogUtils.i("已授权shizuku");
-                //textview.setText("已授权Shizuku");
-                //imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                textview2.setVisibility(View.GONE);
+                Toast.makeText(getBaseContext(), "已授权shizuku", Toast.LENGTH_SHORT).show();
 
-                if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) != 0){
-                    ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-
-                    cardView.setCardBackgroundColor(getColor(R.color.柠檬绿));
-                    textview.setText("已授权");
-                    textview.setTextColor(Color.WHITE);
-                    editor.putBoolean("granted", true).commit();
-                    imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                    //startActivity(intent);
-                }else {
-                    LogUtils.i("写入安全设置已授权");
-                   // ToastUtils.showShort("写入安全设置已授权");
-                    cardView.setCardBackgroundColor(getColor(R.color.柠檬绿));
-                    textview.setText("已授权");
-                    textview.setTextColor(Color.WHITE);
-                    editor.putBoolean("granted", true).commit();
-                    imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                }
+                ActivityUtils.startActivity(intent);
 
             } else {
-
-               if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) != 0){
                 // Request the permission
                     new AlertDialog.Builder(this)
                             .setCancelable(false)
@@ -243,36 +185,15 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                                 LogUtils.i(dialog.toString());
                             })
                             .show();
-               }else {
-
-                if (checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS) != 0){
-                    ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-
-                    cardView.setCardBackgroundColor(getColor(R.color.柠檬绿));
-                    textview.setText("已授权");
-                    textview.setTextColor(Color.WHITE);
-                    editor.putBoolean("granted", true).commit();
-                    imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                    //startActivity(intent);
-                }else {
-                    LogUtils.i("写入安全设置已授权");
-                    cardView.setCardBackgroundColor(getColor(R.color.柠檬绿));
-                    textview.setText("已授权");
-                    textview.setTextColor(Color.WHITE);
-                    editor.putBoolean("granted", true).commit();
-                    imageView.setImageResource(R.drawable.ic_twotone_done_24);
-                }
-               }
             }
 
         }catch (IllegalStateException e){
-            LogUtils.e(e.fillInStackTrace());
+            Toast.makeText(this, ""+e.fillInStackTrace(), Toast.LENGTH_SHORT).show();
             try {
                 new AlertDialog.Builder(this)
                         .setCancelable(false)
-                        .setTitle("运行环境检查")
-                        .setMessage("Shizuku服务未运行")
-                        .setPositiveButton("启动Shizuku", (dialog, which) -> {
+                        .setMessage("Shizuku服务未运行,无法申请权限 \n您希望启动 Shizuku 吗？")
+                        .setPositiveButton("启动", (dialog, which) -> {
                             try {
                                 Intent intent1 = new Intent().setComponent(new ComponentName("moe.shizuku.privileged.api", "moe.shizuku.manager.MainActivity")).setAction(Intent.ACTION_VIEW);
                                 this.startActivityForResult(intent1, 1234);
@@ -282,16 +203,11 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                             }
                         })
                         .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                            LogUtils.i(dialog.toString());
+
                         }).show();
-            }catch (Exception e1){
-                LogUtils.e(e1.fillInStackTrace());
-            }
-            //ToastUtils.showShort("Shizuku服务未运行");
+            }catch (Exception ignored){}
         }
     }
-
-
 
 
     @Override
@@ -320,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
        // getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.add(0,1,0,"反馈问题").setIcon(R.drawable.ic_baseline_bug_report_24);
+
         return true;
     }
 
@@ -348,66 +264,69 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            ActivityUtils.startActivity(intent);
-            //return true;
-        }
-        if (id == 1) {
-            //checkShizukuStatus();
-            Uri uri = Uri.parse("https://tenapi.cn/qq/?qq=3207754367");
 
-            Intent intent3 = new Intent(Intent.ACTION_SENDTO).setData(Uri.parse("mailto:3207754367@qq.com"));
-            startActivity(intent3);
 
-            //startActivity(new Intent(Intent.ACTION_VIEW,uri).setClassName("com.android.browser","com.android.browser.BrowserActivity"));
-                   // .setClassName("com.tencent.mobileqq","com.tencent.mobileqq.activity.QQBrowserActivity"));
-           // openCustomTabs("https://tenapi.cn/qq/?qq=3207754367");
+        if (id == 2){
+            try {
+
+                List list = Arrays.asList(Arrays.stream(PowerManager.class.getDeclaredMethods()).toArray());
+                StringBuffer stringBuffer = new StringBuffer();
+                for (int i = 0; i<list.size(); i++){
+                    stringBuffer.append(list.get(i)+"\n\n");
+                }
+
+                new AlertDialog.Builder(this)
+                        .setCancelable(false)
+                        .setMessage(PowerManager.class.getSimpleName()+"所有方法\n\n"+stringBuffer)
+                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> { })
+                        .show();
+
+            }catch (Exception e){
+                LogUtils.e(e.fillInStackTrace());
+            }
+
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void Ops检查权限状态(String a) //调用ops权限管理器校验权限是否真的授权
+
+    private void answerCall() {
+        PowerManager prMag = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        Class<PowerManager> c = PowerManager.class;
+        Method mthCall = null;
+        try {
+            mthCall = c.getDeclaredMethod("reboot", (Class[]) null);
+            mthCall.setAccessible(true);
+            //IPowerManger iTel = (IPowerManger) mthCall.invoke(prMag,(Object[]) null);
+            //iTel.reboot();
+            this.finish();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            e.printStackTrace();
+            e.printStackTrace();
+        }
+    }
+
+    private Integer checkOps(String a) //调用ops权限管理器校验权限是否真的授权
     {
         AppOpsManager opsMgr = (AppOpsManager) getApplicationContext().getSystemService(APP_OPS_SERVICE);;
         // 检查权限是否已授权
         switch (opsMgr.checkOp(a, android.os.Process.myUid(), getPackageName())) {
             case (AppOpsManager.MODE_ALLOWED):
                 LogUtils.i("AppOps", a + "已授权");
-                switch (a){
-                    case "android:audio_media_volume":
-                        break;
-                    case "android:write_secure_settings":
-                        ToastUtils.showShort("已授权"+a);
-                        break;
-                }
-                break;
+                return 0;
             case (AppOpsManager.MODE_IGNORED):
-                LogUtils.e(a + " 权限被设置为忽略\n"+"锁我喉是吧!? 搞偷袭!? 小伙子，你不讲武德\n"+ RomUtils.getRomInfo().getName()+" 是吧？ 算你狠");
+                LogUtils.e(a + " 权限被设置为忽略\n"+ RomUtils.getRomInfo().getName());
+                return 1;
             case (AppOpsManager.MODE_ERRORED):
-                LogUtils.e(a + " 权限被设置为拒绝\n"+"锁我喉是吧!? 搞偷袭!? 小伙子，你不讲武德\n"+ RomUtils.getRomInfo().getName()+" 是吧？ 算你狠");
-                break;
+                LogUtils.e(a + " 权限被设置为拒绝\n"+ RomUtils.getRomInfo().getName());
+                return 2;
         }
+        return null;
     }
 
-    private void 申请权限(String 权限) {
-
-        PermissionUtils.permission(权限).callback(new PermissionUtils.SimpleCallback() {
-            @Override
-            public void onGranted() {
-                LogUtils.i("成功获取权限："+权限);
-                ToastUtils.showLong(权限+" 已授权");
-            }
-            @Override
-            public void onDenied() {
-
-            }
-        }).explain((activity, denied, shouldRequest) -> {
-            LogUtils.e(denied.toString());
-        }).request();
-    }
-
-    private void initRish(String cmd) {
+    private void initrish() {
         try {
             InputStream is = getBaseContext().getAssets().open("rish");
             inputStream2File(is,new File(PathUtils.getInternalAppDataPath()+"/files/rish"));
@@ -416,10 +335,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         }catch (Exception e){
             LogUtils.e(e.fillInStackTrace());
         }
-
         ShellUtils.execCmd("/system/bin/chmod 777 "+PathUtils.getInternalAppDataPath()+"/files/rish",false);
-        //Ops检查权限状态(AppOpsManager.permissionToOp(Manifest.permission.WRITE_SECURE_SETTINGS));
-        //checkPermissionStatus(Manifest.permission.WRITE_SECURE_SETTINGS);
     }
 
 
@@ -467,14 +383,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     public void onRequestPermissionResult(int requestCode, int grantResult) {
 
         if (grantResult == 0){
-            LogUtils.i("太好了，Shizuku授权完成");
-            ToastUtils.showShort("Shizuku已授权");
-            //imageView.setImageResource(R.drawable.ic_twotone_done_24);
-            textview2.setVisibility(View.GONE);
-
-            ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+ Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
-
-            checkShizukuStatus();
+            //ToastUtils.showShort("Shizuku已授权");
 
         }else {
 
@@ -498,10 +407,4 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()){
-
-        }
-    }
 }

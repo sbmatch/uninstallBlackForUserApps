@@ -108,8 +108,8 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             }
         });*/
 
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.setting);
 
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
@@ -132,8 +132,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         textView = view.findViewById(R.id.textView1);
 
         setTextViewFlag(textView);
-
-        IBinder iBinder = (new ShizukuBinderWrapper(SystemServiceHelper.getSystemService("statusbar")));
 
     }
 
@@ -185,8 +183,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         // getMenuInflater().inflate(R.menu.menu_main, menu);
-        menu.add(0,1,0,"展示广告").setIcon(R.drawable.ic_baseline_card_giftcard_24);
-        menu.add(0,2,0,"系统类信息").setIcon(R.drawable.ic_baseline_card_giftcard_24);
+        menu.add(0,1,0,"点我看广告").setIcon(R.drawable.ic_baseline_card_giftcard_24).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         return true;
     }
 
@@ -224,10 +221,10 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             RewardedAd.load(this, adTestId, adRequest, new RewardedAdLoadCallback() {
                 @Override
                 public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    LogUtils.e("错误代码："+loadAdError.getCode() +"\n："+loadAdError.getMessage());
+                    LogUtils.e("错误代码："+loadAdError.getCode());
                     //mDialog("广告加载失败","错误代码："+loadAdError.getCode() +"\n\n"+loadAdError.getMessage());
-                    ToastUtils.showLong("Google广告加载失败\n\n"+loadAdError.getMessage());
-                    //ToastUtils.showShort("\n\n正在加载穿山甲广告\n");
+                    ToastUtils.showShort(loadAdError.getMessage());
+
                    // 穿山甲();
                     super.onAdFailedToLoad(loadAdError);
                 }
@@ -235,7 +232,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 @Override
                 public void onAdLoaded(@NonNull RewardedAd rewardedAd) {
                     mRewardedAd = rewardedAd;
-                    mDialog("广告","点击确定将会播放广告, 这将浪费你几秒时间");
+                    mDialog("广告","这将浪费你几秒时间");
                     super.onAdLoaded(rewardedAd);
                 }
             });

@@ -30,7 +30,10 @@
                             android:layout_height="24dp"
                             android:layout_alignParentStart="true"
                             android:layout_centerInParent="true"
-                            android:layout_margin="12dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:layout_marginBottom="12dp"
                             android:contentDescription="@string/status" />
 
                         <androidx.appcompat.widget.AppCompatTextView

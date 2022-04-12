@@ -12,11 +12,14 @@
 -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
 
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:manageSpaceActivity="com.ma.powersoundswitch.activity.SettingActivity"
+        android:resizeableActivity="true"
         android:theme="@style/Theme.MaterialComponents.Ma.Light"
         android:supportsRtl="true">
 

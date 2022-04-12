@@ -2,6 +2,8 @@ package com.ma.powersoundswitch.fragment;
 
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.content.Intent.ACTION_SEND;
+import static android.content.Intent.ACTION_SENDTO;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -12,8 +14,11 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.AlarmClock;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.view.Gravity;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -30,6 +35,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.blankj.utilcode.util.AppUtils;
 import com.blankj.utilcode.util.FileIOUtils;
 import com.blankj.utilcode.util.FileUtils;
 import com.blankj.utilcode.util.LogUtils;
@@ -37,6 +43,7 @@ import com.blankj.utilcode.util.PathUtils;
 import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.ToastUtils;
+import com.blankj.utilcode.util.Utils;
 import com.ma.powersoundswitch.R;
 import com.ma.powersoundswitch.activity.ContentUriUtil;
 import com.microsoft.appcenter.AppCenter;
@@ -46,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
 
 public class SettingFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceClickListener,Preference.OnPreferenceChangeListener {
@@ -56,7 +64,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
     private ContentResolver cr;
 
-    private Preference about,AppCanter,开源,电源音,低电量音,自定义低电量音路径,锁屏音,自定义锁屏音路径,解锁音,自定义解锁音路径;
+    private Preference about,AppCanter,开源,电源音,低电量音,自定义低电量音路径,锁屏音,自定义锁屏音路径,解锁音,自定义解锁音路径,bugreply;
 
     private SharedPreferences sp;
     private SharedPreferences.Editor editor;
@@ -116,9 +124,9 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         自定义锁屏音路径 = findPreference("lock_sound_path");
         解锁音 = findPreference("unlock_sound");
         自定义解锁音路径 = findPreference("unlock_sound_path");
+        bugreply = findPreference("bugreply");
 
         ToastUtils.make().setDurationIsLong(true).setLeftIcon(R.drawable.ic_baseline_error_24).setGravity(Gravity.CENTER,0,0).setMode(ToastUtils.MODE.DARK).setTextSize(24).show("设置后重启即可生效");
-        // ToastUtils.make().setDurationIsLong(true).setLeftIcon(R.drawable.ic_baseline_error_24).setGravity(Gravity.CENTER,0,0).setMode(ToastUtils.MODE.DARK).setTextSize(24).show("抱歉，除了电源音外，其他功能暂时停用\n\n开发者正尝试修复在其他设备\n不可用的问题");
 
         about.setOnPreferenceClickListener(this);
         AppCanter.setOnPreferenceChangeListener(this);
@@ -130,6 +138,7 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
         自定义锁屏音路径.setOnPreferenceClickListener(this);
         解锁音.setOnPreferenceChangeListener(this);
         自定义解锁音路径.setOnPreferenceClickListener(this);
+        bugreply.setOnPreferenceClickListener(this);
 
         sp = requireContext().getSharedPreferences("status",MODE_PRIVATE);
         editor = requireContext().getSharedPreferences("status",MODE_PRIVATE).edit();
@@ -148,11 +157,9 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
 
     private void initNullOggPath() {
         //准备资源
-        LogUtils.i("正在准备资源...");
         InputStream is = getResources().openRawResource(R.raw.disable);
         FileIOUtils.writeFileFromIS(PathUtils.getExternalAppMusicPath() + "/" + "disable.ogg", is);
         NullOgg = PathUtils.getExternalAppMusicPath() + "/" + "disable.ogg";
-        LogUtils.e(NullOgg);
     }
 
     private void initConfig() {
@@ -162,12 +169,16 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
     }
 
 
-    private int checkPermissionStatus(String permission) //调用ops权限管理器校验权限是否真的授权
+    private int checkPermissionStatus(String permission) //校验权限是否授权
     {
         if (ContextCompat.checkSelfPermission(requireContext(),permission) != 0) {
             LogUtils.e(permission+" 未授权");
 
-            //ShellUtils.execCmd("sh "+PathUtils.getInternalAppDataPath()+"/files/rish -c "+"\"pm grant com.ma.powersoundswitch "+Manifest.permission.WRITE_SECURE_SETTINGS+ "\" &",false);
+            ShellUtils.execCmd("sh "+ PathUtils.getInternalAppDataPath()+"/files/rish -c "
+                    +"\"pm grant com.ma.powersoundswitch "
+                    + Manifest.permission.WRITE_SECURE_SETTINGS
+                    + "\" &",false);
+
         }else {
             LogUtils.i("已备份默认数据"+sp.getAll());
 
@@ -218,10 +229,22 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 break;
             case "unlock_sound_path":
                 ToastUtils.showShort("请选择ogg格式文件");
-                //Intent intent3 = new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE);
-                //startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("audio/ogg").addCategory(Intent.CATEGORY_OPENABLE), 666);
-
                 mGetContent3.launch("audio/ogg");
+                break;
+            case "bugreply":
+               /* try {
+                    File file = new File(String.valueOf(LogUtils.getLogFiles().get(0)));
+
+                    requireActivity().startActivity(new Intent(ACTION_SEND).putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file))
+                            .putExtra(Intent.EXTRA_SUBJECT, AppUtils.getAppName() +" 用户反馈")
+                            .putExtra(Intent.EXTRA_TEXT, "你好，我亲爱的用户。\n是遇到了什么问题或者有什么意见想告诉我什么吗?\n附件是本应用产生的log，它将帮助我更好的定位问题" + "\n") //正文
+                            .setData(Uri.parse("mailto:3207754367@qq.com")));
+
+                }catch (IndexOutOfBoundsException outOfBoundsException){
+                    LogUtils.e(outOfBoundsException.fillInStackTrace()+"\n"+LogUtils.getLogFiles());
+                }*/
+                openCustomTabs("https://privacy.mpcloud.top/valine");
+
                 break;
             case "opensource":
                 openCustomTabs("https://github.com/sbmatch/powersoundswitch");
@@ -230,8 +253,6 @@ public class SettingFragment extends PreferenceFragmentCompat implements Prefere
                 //ToastUtils.showShort(AppUtils.getAppVersionName());
                 new AlertDialog.Builder(requireContext())
                         .setCancelable(false)
-                        .setIcon(R.drawable.ic_launcher_foreground)
-                        .setTitle(R.string.about)
                         .setMessage(R.string.at)
                         .setPositiveButton(R.string.lab_submit, (dialog, which) -> { })
                         //.setNegativeButton(R.string.lab_cancel, (dialog, which) -> { LogUtils.i(dialog.toString()); })
