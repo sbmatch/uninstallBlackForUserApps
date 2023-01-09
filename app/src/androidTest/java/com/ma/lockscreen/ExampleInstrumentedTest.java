@@ -1,4 +1,4 @@
-package com.ma.powersoundswitch;
+package com.ma.lockscreen;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.ma.powersoundswitch", appContext.getPackageName());
+        assertEquals("com.ma.lockscreen", appContext.getPackageName());
     }
 }

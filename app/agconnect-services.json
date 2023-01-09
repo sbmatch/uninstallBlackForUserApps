@@ -23,7 +23,7 @@
 		"project_id":"737518067794063288",
 		"app_id":"105280815",
 		"api_key":"DAEDAAlIz6wNWkDu14GIctnTIwEGnIKLB0X0fOU7JV0S+n1Q9/QOOHde4PdDiSmpYKFmL8ZhfjT2PckV0Iy5MfDPKIND1uFHgCFKHw==",
-		"package_name":"com.ma.powersoundswitch"
+		"package_name":"com.ma.lockscreen"
 	},
 	"oauth_client":{
 		"client_id":"105280815",
@@ -31,7 +31,7 @@
 	},
 	"app_info":{
 		"app_id":"105280815",
-		"package_name":"com.ma.powersoundswitch"
+		"package_name":"com.ma.lockscreen"
 	},
 	"service":{
 		"analytics":{
@@ -57,12 +57,12 @@
 	"configuration_version":"3.0",
 	"appInfos":[
 		{
-			"package_name":"com.ma.powersoundswitch",
+			"package_name":"com.ma.lockscreen",
 			"client":{
 				"app_id":"105280815"
 			},
 			"app_info":{
-				"package_name":"com.ma.powersoundswitch",
+				"package_name":"com.ma.lockscreen",
 				"app_id":"105280815"
 			},
 			"oauth_client":{

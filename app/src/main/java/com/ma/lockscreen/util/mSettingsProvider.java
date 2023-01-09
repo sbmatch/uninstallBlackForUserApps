@@ -1,4 +1,4 @@
-package com.ma.powersoundswitch.util;
+package com.ma.lockscreen.util;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;

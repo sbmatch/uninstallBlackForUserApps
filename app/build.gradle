@@ -1,23 +1,26 @@
 plugins {
     id 'com.android.application'
-    id 'com.huawei.agconnect'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
-    compileSdk 31
+    compileSdk 33
 
     defaultConfig {
-        applicationId "com.ma.powersoundswitch"
+        applicationId "com.ma.blackuninstaller"
         minSdk 26
-        targetSdk 31
-        versionCode 7
-        versionName "1.7"
+        targetSdk 30
+        versionCode 110
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             //设置支持的SO库架构，当前支持x86,armeabi-v7a,x86_64,arm64-v8a
-            abiFilters 'arm64-v8a','x86_64'
+            abiFilters 'arm64-v8a'
         }
+
+
     }
 
     buildTypes {
@@ -33,39 +36,77 @@ android {
     buildFeatures {
         viewBinding true
     }
+    sourceSets {
+        main {
+            aidl {
+                srcDirs 'src\\main\\aidl'
+            }
+
+            jniLibs.srcDirs = ['libs']
+
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            //path 'src/main/jni/'
+        }
+    }
+
+
 }
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation "androidx.preference:preference:1.1.1"
-    implementation "androidx.browser:browser:1.4.0"
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'com.google.android.gms:play-services-ads:20.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-savedstate:2.3.1'
-    implementation 'androidx.activity:activity:1.3.0-alpha06'
-    implementation 'androidx.fragment:fragment:1.3.6'
+    implementation fileTree(dir: 'libs')
 
-    implementation 'com.huawei.agconnect:agconnect-crash:1.6.3.300'
-    implementation 'com.huawei.agconnect:agconnect-crash-native:1.6.3.300'
+    implementation 'com.google.android.material:material:1.8.0-beta01'
+//    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation 'androidx.preference:preference:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation 'androidx.documentfile:documentfile:1.1.0-alpha01'
+    implementation 'androidx.activity:activity:1.6.1'
+    implementation 'androidx.fragment:fragment:1.5.5'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
 
-    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.2'
+    //implementation 'com.google.android.gms:play-services-base:18.1.0'
+    //implementation 'com.google.android.gms:play-services-tasks:18.0.2'
+//    implementation 'com.google.android.play:core:1.10.3'
 
-   // implementation 'org.apache.commons:commons-lang3:3.11'
+    //implementation 'androidx.constraintlayout:constraintlayout:2.1.0'
 
-    //implementation 'com.pangle.cn:ads-sdk-pro:4.0.1.9' //穿山甲
+    implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
+   // implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
+    implementation 'com.google.firebase:firebase-crashlytics'
+
+
+    //implementation 'dev.rikka.rikkax.material:material-preference:2.0.0'
+   // implementation 'dev.rikka.rikkax.material:material:2.5.1'
+   // implementation 'dev.rikka.rikkax.appcompat:appcompat:1.5.0.1'
+    implementation 'dev.rikka.rikkax.recyclerview:recyclerview-adapter:1.3.0'
+    implementation 'dev.rikka.rikkax.preference:simplemenu-preference:1.0.3'
+
+    implementation 'androidx.core:core-splashscreen:1.0.0'
+
+    implementation platform('com.google.firebase:firebase-bom:31.1.1')
+    implementation 'com.google.firebase:firebase-analytics'
+
+    compileOnly 'dev.rikka.hidden:stub:3.4.3'
+    implementation 'dev.rikka.hidden:compat:3.4.3'
 
     //Android常用工具库
-    implementation 'com.blankj:utilcodex:1.31.0'
-
+    implementation 'com.blankj:utilcodex:1.31.1'
     //微软AppCenter
-    def appCenterSdkVersion = '4.3.1'
-    implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
-    implementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
+//    def appCenterSdkVersion = '4.3.1'
+//    implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
+//    implementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
     //Shizuku
     def shizuku_version = '12.1.0'
     implementation "dev.rikka.shizuku:api:$shizuku_version"
-    // Add this line if you want to support Shizuku
     implementation "dev.rikka.shizuku:provider:$shizuku_version"
+
 }

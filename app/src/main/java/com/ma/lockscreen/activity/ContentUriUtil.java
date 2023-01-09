@@ -1,4 +1,4 @@
-package com.ma.powersoundswitch.activity;
+package com.ma.lockscreen.activity;
 
 import android.content.ContentUris;
 import android.content.Context;
@@ -8,8 +8,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-
-import com.blankj.utilcode.util.LogUtils;
+import android.util.Log;
 
 public class ContentUriUtil {
     /**
@@ -87,7 +86,7 @@ public class ContentUriUtil {
             return uri.getPath();
         }
         }catch (NullPointerException e){
-            LogUtils.e(e.fillInStackTrace());
+            Log.e("getPath",e.getMessage());
         }
         return null;
     }

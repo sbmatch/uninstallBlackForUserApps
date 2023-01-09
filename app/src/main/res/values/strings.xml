@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">设置全局音效</string>
+    <string name="app_name">可卸载管理</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -27,4 +27,8 @@
     <string name="status">状态</string>
     <string name="shizukuRunStatus">Shizuku 服务没有运行</string>
     <string name="shizuku_GrantStatus">Shizuku 没有授权</string>
+    <string name="use_to_writefile">用于往公共目录拉屎</string>
+    <string name="use_to_getDervinfo">拿你隐私</string>
+    <string name="workserverDesc">跟随 Shizuku 启动的进程</string>
+    <string name="uninstall_desc">我们借助Shizuku从系统底层管理应用的卸载行为</string>
 </resources>

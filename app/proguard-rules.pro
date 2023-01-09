@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-allowaccessmodification
+
+# 包名不混合大小写
+-dontusemixedcaseclassnames
+# 禁用预验证
+-dontpreverify
+# 忽略警告
+-dontwarn com.**

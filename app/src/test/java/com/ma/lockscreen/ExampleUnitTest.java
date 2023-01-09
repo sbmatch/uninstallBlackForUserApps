@@ -1,4 +1,4 @@
-package com.ma.powersoundswitch;
+package com.ma.lockscreen;
 
 import org.junit.Test;
 

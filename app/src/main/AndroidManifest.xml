@@ -1,43 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ma.powersoundswitch">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.ma.lockscreen">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 查询所有软件包 -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
-    <!--必要权限，解决安全风险漏洞，发送和注册广播事件需要调用带有传递权限的接口-->
- <!--   <permission      android:name="${applicationId}.openadsdk.permission.TT_PANGOLIN"
-        android:protectionLevel="signature" />
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
 
-    <uses-permission android:name="${applicationId}.openadsdk.permission.TT_PANGOLIN" />
--->
-    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
-
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
+        android:name=".util.BaseAppliation"
         android:allowBackup="true"
+        android:directBootAware="true"
+        android:hasFragileUserData="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:manageSpaceActivity="com.ma.powersoundswitch.activity.SettingActivity"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:persistent="true"
         android:resizeableActivity="true"
-        android:theme="@style/Theme.MaterialComponents.Ma.Light"
-        android:supportsRtl="true">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/MySplashScreen"
+        tools:targetApi="q">
 
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:name=".activity.DialogActivity"
+            android:enabled="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Best.Theme.Material.Dialog"
+            android:exported="true">
         </activity>
 
-        <activity android:name=".activity.SettingActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+        <receiver
+            android:name=".receiver.MyBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="com.ma.lockscreen.receiver" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.HEADSET_PLUG" />
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                <action android:name="android.intent.action.CLOSE_SYSTEM_DIALOGS" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_TICK" />
+                <action android:name="android.media.VOLUME_CHANGED_ACTION" />
+                <action android:name="android.intent.action.PACKAGES_SUSPENDED" />
+                <action android:name="android.intent.action.SCREEN_OFF" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.MyWorkService"
+            android:description="@string/workserverDesc"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true"
+            android:priority="1000" />
+        <service
+            android:name=".service.MyJobService"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:priority="999" />
+        <service
+            android:name=".service.MyIPCService"
+            android:directBootAware="true"
+            android:enabled="true"
+            android:exported="true"
+            android:priority="1000"
+            android:process=":MyIPCService" />
+
+        <activity
+            android:name="com.ma.lockscreen.MainActivity"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:theme="@style/Best.Theme.Material.Light">
+
+        </activity>
+
+        <activity android:name=".activity.SplashScreenActivity"
+            android:exported="true"
+            android:launchMode="singleTop" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -47,8 +108,8 @@
             android:exported="true"
             android:multiprocess="false"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
-
-       <!-- <provider
+        <!--
+ <provider
             android:name="com.bytedance.sdk.openadsdk.TTFileProvider"
             android:authorities="${applicationId}.TTFileProvider"
             android:exported="false"
@@ -56,12 +117,35 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
-        </provider>-->
+        </provider>
+        -->
+<!--        <receiver-->
+<!--            android:name=".nearby.ExposureNotificationBroadcastReceiver"-->
+<!--            android:exported="true"-->
+<!--            android:permission="com.google.android.gms.nearby.exposurenotification.EXPOSURE_CALLBACK">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.google.android.gms.exposurenotification.ACTION_EXPOSURE_STATE_UPDATE" />-->
+<!--                <action android:name="com.google.android.gms.exposurenotification.ACTION_EXPOSURE_NOT_FOUND" />-->
+<!--                <action android:name="com.google.android.gms.exposurenotification.SERVICE_STATE_UPDATED" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-6149360771976686~7073426268"/>
 
+<!--        <receiver android:name=".receiver.PolicyDeviceAdminReceiver"-->
+<!--            android:enabled="true"-->
+<!--            android:exported="true"-->
+<!--            android:permission="android.permission.BIND_DEVICE_ADMIN">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />-->
+<!--            </intent-filter>-->
+<!--            <meta-data-->
+<!--                android:name="android.app.device_admin"-->
+<!--                android:resource="@xml/device_admin" />-->
+<!--        </receiver>-->
+
+<!--        <meta-data-->
+<!--            android:name="com.google.android.gms.ads.APPLICATION_ID"-->
+<!--            android:value="ca-app-pub-6149360771976686~7073426268" />-->
     </application>
 
 </manifest>

@@ -1,4 +1,4 @@
-package com.ma.powersoundswitch.fragment;
+package com.ma.lockscreen.fragment;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

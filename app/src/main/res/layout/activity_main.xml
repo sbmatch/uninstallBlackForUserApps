@@ -7,62 +7,21 @@
     tools:context=".MainActivity">
 
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/materialCardView1"
+                <include
+                    android:id="@+id/include"
+                    layout="@layout/setting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_margin="10dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardUseCompatPadding="true"
+            android:layout_height="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="3dp">
-
-                        <ImageView
-                            android:id="@+id/imageview"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_alignParentStart="true"
-                            android:layout_centerInParent="true"
-                            android:layout_marginStart="12dp"
-                            android:layout_marginTop="12dp"
-                            android:layout_marginEnd="12dp"
-                            android:layout_marginBottom="12dp"
-                            android:contentDescription="@string/status" />
-
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/tv"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerInParent="true"
-                            android:layout_marginTop="10dp"
-                            android:layout_toEndOf="@+id/imageview" />
-
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/tv2"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/tv"
-                            android:layout_toEndOf="@+id/imageview"
-                            android:textSize="14dp" />
-
-                </RelativeLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-
-
-        <include layout="@layout/setting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/materialCardView1"/>
-
+            app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
