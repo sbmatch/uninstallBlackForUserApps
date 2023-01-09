@@ -42,7 +42,6 @@ import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.ma.lockscreen.R;
 import com.ma.uninstallBlack.beans.itemBean;
 import com.ma.uninstallBlack.service.MyWorkService;
 import com.ma.uninstallBlack.util.MyItemRecyclerViewAdapter;
@@ -110,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         mainAsyncTask.execute(); //初始化一些数据
 
         RelativeLayout relativeLayout = new RelativeLayout(MainActivity.this);
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
         ProgressBar progressBar = new ProgressBar(MainActivity.this,null);
         progressBar.setId(R.id.main_dialog_progress);
         progressBar.setMax(100);

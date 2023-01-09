@@ -7,5 +7,5 @@ dependencyResolutionManagement {
         maven {url 'https://artifact.bytedance.com/repository/pangle'}
     }
 }
-rootProject.name = "lockscreen"
+rootProject.name = "uninstallBlack"
 include ':app'

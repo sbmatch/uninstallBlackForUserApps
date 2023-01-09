@@ -1,4 +1,4 @@
-package com.ma.lockscreen;
+package com.ma.uninstallBlack;
 
 import android.accounts.Account;
 
