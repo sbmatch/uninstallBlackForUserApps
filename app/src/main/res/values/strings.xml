@@ -30,5 +30,5 @@
     <string name="use_to_writefile">用于往公共目录拉屎</string>
     <string name="use_to_getDervinfo">拿你隐私</string>
     <string name="workserverDesc">跟随 Shizuku 启动的进程</string>
-    <string name="uninstall_desc">我们借助Shizuku从系统底层管理应用的卸载行为</string>
+    <string name="uninstall_desc">我们借助Shizuku从系统底层管理应用的卸载行为, 这使得我们能够让第三方应用像系统应用那样被禁止卸载</string>
 </resources>
