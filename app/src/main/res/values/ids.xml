@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="materialTextview1" type="id" />
+    <item name="progressBar1" type="id" />
+    <item name="content_layout1" type="id" />
+    <item name="videoview" type="id" />
+    <item name="ctlayout" type="id" />
+    <item name="down" type="id" />
+    <item name="main_dialog_progress" type="id"/>
+    <item name="main_dialog_text" type="id"/>
+</resources>

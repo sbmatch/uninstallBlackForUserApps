@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.ma.lockscreen">
+    package="com.ma.uninstallBlack">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 查询所有软件包 -->
@@ -17,7 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".util.BaseAppliation"
+        android:name="com.ma.uninstallBlack.util.BaseAppliation"
         android:allowBackup="true"
         android:directBootAware="true"
         android:hasFragileUserData="true"
@@ -32,7 +32,7 @@
         tools:targetApi="q">
 
         <activity
-            android:name=".activity.DialogActivity"
+            android:name="com.ma.uninstallBlack.activity.DialogActivity"
             android:enabled="true"
             android:excludeFromRecents="true"
             android:theme="@style/Best.Theme.Material.Dialog"
@@ -40,7 +40,7 @@
         </activity>
 
         <receiver
-            android:name=".receiver.MyBroadcastReceiver"
+            android:name="com.ma.uninstallBlack.receiver.MyBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="1000">
@@ -63,21 +63,21 @@
         </receiver>
 
         <service
-            android:name=".service.MyWorkService"
+            android:name="com.ma.uninstallBlack.service.MyWorkService"
             android:description="@string/workserverDesc"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
             android:priority="1000" />
         <service
-            android:name=".service.MyJobService"
+            android:name="com.ma.uninstallBlack.service.MyJobService"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:priority="999" />
         <service
-            android:name=".service.MyIPCService"
+            android:name="com.ma.uninstallBlack.service.MyIPCService"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
@@ -85,14 +85,14 @@
             android:process=":MyIPCService" />
 
         <activity
-            android:name="com.ma.lockscreen.MainActivity"
+            android:name="com.ma.uninstallBlack.MainActivity"
             android:exported="true"
             android:resizeableActivity="true"
             android:theme="@style/Best.Theme.Material.Light">
 
         </activity>
 
-        <activity android:name=".activity.SplashScreenActivity"
+        <activity android:name="com.ma.uninstallBlack.activity.SplashScreenActivity"
             android:exported="true"
             android:launchMode="singleTop" >
             <intent-filter>

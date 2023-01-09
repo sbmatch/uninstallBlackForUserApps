@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "777306314377",
+    "project_id": "mapingpps",
+    "storage_bucket": "mapingpps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:777306314377:android:fb5b9fa7bcff1d94601858",
+        "android_client_info": {
+          "package_name": "com.ma.blackuninstaller"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "777306314377-s6piv3f95rb9gntudnj9i1bpiq2bdip6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPHHMlcN_F9ZZt5oSVr4Go7C5CtJ1X0Hg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "777306314377-s6piv3f95rb9gntudnj9i1bpiq2bdip6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
