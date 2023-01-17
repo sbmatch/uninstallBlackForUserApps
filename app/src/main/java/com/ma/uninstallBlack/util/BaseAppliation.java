@@ -1,5 +1,8 @@
 package com.ma.uninstallBlack.util;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -11,11 +14,14 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.blankj.utilcode.util.Utils;
+import com.google.firebase.FirebaseApp;
+import com.ma.uninstallBlack.activity.DialogActivity;
 import com.ma.uninstallBlack.receiver.MyBroadcastReceiver;
 import com.ma.uninstallBlack.service.MyJobService;
 
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
 
+@SuppressLint("DiscouragedPrivateApi")
 public class BaseAppliation extends Application {
     public static final int JOB2_ID = 100000;
     public static final int InitTime = (int) SystemClock.uptimeMillis();
@@ -28,10 +34,8 @@ public class BaseAppliation extends Application {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             HiddenApiBypass.addHiddenApiExemptions("");
         }
+
         Utils.init(this);
-        //XCrash.init(this, new XCrash.InitParameters().setLogDir(getExternalFilesDir("Logs").getAbsolutePath()));
-        //Log.i("logPath",XCrash.getLogDir());
-        //XCrash.testJavaCrash(true);
 
         Intent intent = new Intent("com.ma.lockscreen.receiver");
         intent.setComponent(new ComponentName(getPackageName(), MyBroadcastReceiver.class.getName()));
@@ -48,6 +52,18 @@ public class BaseAppliation extends Application {
         }catch (RuntimeException e){
             Log.e(LOG_TAG,e.getMessage());
         }
+
+        StringBuilder ss = new StringBuilder();
+
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+
+            for (StackTraceElement s: t.getStackTrace()){
+                if (s.toString().contains("com.ma.uninstall")){
+                    ss.append(s).append("\n");
+                }
+            }
+            //startActivity(new Intent(this, DialogActivity.class).setFlags(FLAG_ACTIVITY_NEW_TASK).setAction(e.fillInStackTrace().toString()));
+        });
 
     }
 

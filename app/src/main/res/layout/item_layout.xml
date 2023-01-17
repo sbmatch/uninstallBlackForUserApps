@@ -11,7 +11,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:cardCornerRadius="10dp"
-        app:cardUseCompatPadding="true">
+        app:cardUseCompatPadding="true"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="51dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -26,32 +28,32 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/item_appCompatTextView"
-                android:layout_marginTop="5dp"
+                style="@style/TextAppearance.Material3.BodyLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/TextAppearance.Material3.BodyLarge"
-                android:text="应用名"
-                android:layout_toEndOf="@+id/item_appCompatImageView" />
+                android:layout_marginTop="5dp"
+                android:layout_toEndOf="@+id/item_appCompatImageView"
+                android:text="@string/app_name" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/item_text_packageName"
+                style="@style/TextAppearance.Material3.BodySmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/TextAppearance.Material3.BodySmall"
-                android:text="1.1.0"
-                android:layout_toRightOf="@id/item_appCompatImageView"
-                android:layout_below="@+id/item_appCompatTextView" />
+                android:layout_below="@+id/item_appCompatTextView"
+                android:layout_toEndOf="@id/item_appCompatImageView"
+                android:text="@string/other" />
 
             <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/item_switchWidget"
+                style="@style/Widget.Material3.CompoundButton.Switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/item_switchWidget"
-                app:useMaterialThemeColors="true"
-                android:layout_marginEnd="10dp"
-                android:layout_alignParentEnd="true" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerInParent="true"
+                android:layout_marginEnd="10dp" />
 
         </RelativeLayout>
-
 
 
     </androidx.cardview.widget.CardView>

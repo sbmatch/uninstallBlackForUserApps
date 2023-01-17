@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MySplashScreen" parent="Theme.SplashScreen">
+        <item name="postSplashScreenTheme">@style/Best.Theme.Material.Light</item>
+        <item name="colorPrimary">@color/ic_launcher_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">
+            @drawable/ic_baseline_emoji_emotions_24
+        </item>
+    </style>
+</resources>

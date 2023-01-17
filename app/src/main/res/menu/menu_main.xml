@@ -8,8 +8,15 @@
 <!--        android:orderInCategory="100"-->
 <!--        android:title="暴露通知"-->
 <!--        app:showAsAction="never" />-->
+
+    <item android:id="@+id/remove_neteaseAd"
+        android:title="@string/removeNeteaseAd"/>
+
+    <item android:id="@+id/remove_powersave"
+        android:title="@string/removePowersave"/>
+
     <item
         android:id="@+id/uninstallBlack"
-        android:title="关于卸载"
+        android:title="@string/aboutBlackUninstall"
         app:showAsAction="never"/>
 </menu>

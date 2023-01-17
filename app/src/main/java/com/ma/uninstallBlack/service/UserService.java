@@ -1,7 +1,6 @@
 package com.ma.uninstallBlack.service;
 
 
-import static com.ma.uninstallBlack.util.OtherUtils.myFileObserver;
 import static rikka.shizuku.SystemServiceHelper.getSystemService;
 
 import android.accounts.Account;
@@ -16,6 +15,7 @@ import android.app.admin.IDevicePolicyManager;
 import android.app.admin.SystemUpdatePolicy;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.IIntentReceiver;
 import android.content.IIntentSender;
 import android.content.Intent;
@@ -24,11 +24,11 @@ import android.content.pm.IPackageDeleteObserver2;
 import android.content.pm.IPackageInstaller;
 import android.content.pm.IPackageInstallerSession;
 import android.content.pm.IPackageManager;
+import android.content.pm.IShortcutService;
 import android.content.pm.PackageInstaller;
 import android.content.pm.VersionedPackage;
 import android.hardware.ISensorPrivacyManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.IDeviceIdleController;
@@ -43,11 +43,14 @@ import com.ma.uninstallBlack.util.MyFileObserver;
 import com.ma.uninstallBlack.util.OtherUtils;
 import com.ma.uninstallBlack.util.PackageInstallerUtils;
 
+import org.apache.commons.io.monitor.FileAlterationListener;
+
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -67,6 +70,9 @@ public class UserService extends IUserService.Stub {
     public static IAccountManager iAccountManager = IAccountManager.Stub.asInterface(SystemServiceHelper.getSystemService("account"));
     public static IDevicePolicyManager iDevicePolicyManager = IDevicePolicyManager.Stub.asInterface(SystemServiceHelper.getSystemService("device_policy"));
 
+    public static IShortcutService iShortcutService = IShortcutService.Stub.asInterface(ServiceManager.getService(Context.SHORTCUT_SERVICE));
+
+    public static  WatchService watchService;
     public UserService () {
 
     }
@@ -100,6 +106,26 @@ public class UserService extends IUserService.Stub {
     @Override
     public void removePowerWhitelistApp(String pkg_name) throws RemoteException {
         idleController.removePowerSaveWhitelistApp(pkg_name);
+    }
+
+    @Override
+    public void addPowerSaveWhitelistApp(String name) throws RemoteException {
+        idleController.addPowerSaveWhitelistApp(name);
+    }
+
+    @Override
+    public int addPowerSaveWhitelistApps(List<String> packageNames) throws RemoteException {
+        return idleController.addPowerSaveWhitelistApps(packageNames);
+    }
+
+    @Override
+    public boolean isPowerSaveWhitelistExceptIdleApp(String name) throws RemoteException {
+        return idleController.isPowerSaveWhitelistExceptIdleApp(name);
+    }
+
+    @Override
+    public boolean isPowerSaveWhitelistApp(String name) throws RemoteException {
+        return idleController.isPowerSaveWhitelistApp(name);
     }
 
 
@@ -265,17 +291,16 @@ public class UserService extends IUserService.Stub {
 
     @Override
     public void startWatchFromFileObserver(String file) throws RemoteException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (myFileObserver == null) {
-                myFileObserver = new MyFileObserver(new File(file));
-                myFileObserver.startWatching();
-            }
-        }
+
+
+        new Thread(() -> {
+            OtherUtils.startWatch(file, new MyFileObserver(),1000);
+        }).start();
     }
 
     @Override
     public void stopWatchFromFileObserver() throws RemoteException {
-        myFileObserver.stopWatching();
+        OtherUtils.stopWatch();
     }
 
     @Override

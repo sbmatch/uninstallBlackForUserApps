@@ -8,7 +8,11 @@ interface IDeviceIdleController {
      * Demonstrates some basic types that you can use as parameters
      * and return values in AIDL.
      */
-      void removePowerSaveWhitelistApp(String name);
+     void addPowerSaveWhitelistApp(String name);
+     int addPowerSaveWhitelistApps(in List<String> packageNames);
+     void removePowerSaveWhitelistApp(String name);
+     boolean isPowerSaveWhitelistExceptIdleApp(String name);
+     boolean isPowerSaveWhitelistApp(String name);
      String[] getUserPowerWhitelist();
 
 }

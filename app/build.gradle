@@ -11,19 +11,29 @@ android {
         applicationId "com.ma.blackuninstaller"
         minSdk 26
         targetSdk 30
-        versionCode 110
-        versionName "1.1.0"
+        versionCode 120
+        versionName "1.1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             //设置支持的SO库架构，当前支持x86,armeabi-v7a,x86_64,arm64-v8a
-            abiFilters 'arm64-v8a'
+            abiFilters 'arm64-v8a','x86_64'
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += [
+                        "room.schemaLocation":"$projectDir/schemas".toString(),
+                        "room.incremental":"true",
+                        "room.expandProjection":"true"]
+            }
         }
 
 
     }
 
     buildTypes {
+
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -71,7 +81,13 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.1.0-alpha01'
     implementation 'androidx.activity:activity:1.6.1'
     implementation 'androidx.fragment:fragment:1.5.5'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.appcompat:appcompat:1.6.0'
+
+    def room_version = "2.5.0"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    implementation 'commons-io:commons-io:2.11.0'
 
     //implementation 'com.google.android.gms:play-services-base:18.1.0'
     //implementation 'com.google.android.gms:play-services-tasks:18.0.2'
@@ -81,7 +97,6 @@ dependencies {
 
     implementation 'org.lsposed.hiddenapibypass:hiddenapibypass:4.3'
    // implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.1.0'
-    implementation 'com.google.firebase:firebase-crashlytics'
 
 
     //implementation 'dev.rikka.rikkax.material:material-preference:2.0.0'
@@ -94,6 +109,7 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-crashlytics'
 
     compileOnly 'dev.rikka.hidden:stub:3.4.3'
     implementation 'dev.rikka.hidden:compat:3.4.3'

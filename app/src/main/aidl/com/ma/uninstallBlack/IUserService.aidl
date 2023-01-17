@@ -14,12 +14,18 @@ import android.app.IActivityManager;
 import android.app.IActivityController;
 import android.app.admin.SystemUpdatePolicy;
 import android.content.ComponentName;
+import android.content.pm.ParceledListSlice;
+import android.content.pm.ShortcutInfo;
 
 interface IUserService {
     void destroy() = 16777114;
     void exit() = 1;
     String exec(String cmd) = 2;
     void removePowerWhitelistApp(String pkg_name) = 4;
+    void addPowerSaveWhitelistApp(String name) = 46;
+    int addPowerSaveWhitelistApps(in List<String> packageNames) = 47;
+    boolean isPowerSaveWhitelistExceptIdleApp(String name) = 48;
+    boolean isPowerSaveWhitelistApp(String name) = 49;
     void sensor(boolean z) = 5;
     void ac_reg_proObserver(in IProcessObserver iProcessObserver) = 6;
     void ac_unreg_proObserver(in IProcessObserver iProcessObserver) = 12;
@@ -78,4 +84,6 @@ interface IUserService {
                 IPackageDeleteObserver2 observer, int userId, int flags) = 44;
 
     String doInstallApk(in List<Uri> uris) = 45;
+
+    //void updateShortcuts(String packageName, in ParceledListSlice shortcuts, int userId) = 46;
 }
