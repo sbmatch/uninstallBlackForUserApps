@@ -34,4 +34,5 @@
     <string name="removeNeteaseAd">移除网易云音乐启动页广告</string>
     <string name="aboutBlackUninstall">关于卸载</string>
     <string name="removePowersave">移除电池优化白名单</string>
+    <string name="suppert_msg">暂无服务提供商</string>
 </resources>

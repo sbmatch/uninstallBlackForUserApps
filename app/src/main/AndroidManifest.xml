@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ma.uninstallBlack">
 
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 查询所有软件包 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <queries>
         <intent>
@@ -20,7 +20,7 @@
         android:name=".util.BaseAppliation"
         android:allowBackup="true"
         android:directBootAware="true"
-        android:hasFragileUserData="true"
+        android:hasFragileUserData="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
@@ -34,7 +34,7 @@
         <provider
             android:name=".MyContentProvider"
             android:authorities="com.ma.blackuninstaller.switchprovider"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="false" />
 
         <activity
@@ -44,12 +44,24 @@
             android:exported="true"
             android:theme="@style/Best.Theme.Material.Dialog" />
 
+        <receiver android:name=".receiver.PolicyDeviceAdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data android:name="android.app.device_admin"
+                android:resource="@xml/device_admin"/>
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED"/>
+            </intent-filter>
+
+        </receiver>
+
         <receiver
             android:name=".receiver.MyBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="999">
                 <action android:name="com.ma.lockscreen.receiver" />
+                <action android:name="com.ma.lockscreen.receiver.exit"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.HEADSET_PLUG" />
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
@@ -99,6 +111,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:resizeableActivity="true">
 
         </activity>
@@ -106,15 +119,16 @@
             android:name=".activity.SplashScreenActivity"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
-            android:launchMode="singleTask"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:theme="@style/MySplashScreen">
+            android:launchMode="singleTop"
+            android:roundIcon="@mipmap/ic_launcher_round">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
 
         <provider
             android:name="rikka.shizuku.ShizukuProvider"

@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.ma.blackuninstaller"
         minSdk 26
-        targetSdk 30
+        targetSdk 31
         versionCode 120
         versionName "1.1.2"
 
@@ -36,7 +36,14 @@ android {
 
         release {
             minifyEnabled true
+            shrinkResources true
+            // Zipalign优化
+            zipAlignEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 设置是否要自动上传
+            firebaseCrashlytics {
+                mappingFileUploadEnabled false
+            }
         }
     }
     compileOptions {
@@ -112,7 +119,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
 
     compileOnly 'dev.rikka.hidden:stub:3.4.3'
-    implementation 'dev.rikka.hidden:compat:3.4.3'
+    //implementation 'dev.rikka.hidden:compat:3.4.3'
 
     //Android常用工具库
     implementation 'com.blankj:utilcodex:1.31.1'

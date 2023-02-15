@@ -1,11 +1,21 @@
 package com.ma.uninstallBlack;
 
 
+import static com.ma.uninstallBlack.service.MyJobService.ipcService;
+import static com.ma.uninstallBlack.util.BaseAppliation.jobScheduler;
+import static com.ma.uninstallBlack.util.OtherUtils.dpm;
+
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.NotificationManager;
+import android.app.admin.SystemUpdatePolicy;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -13,7 +23,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ShortcutManager;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -21,57 +30,65 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.provider.DocumentsContract;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatTextView;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.PermissionChecker;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.LogUtils;
 import com.blankj.utilcode.util.ToastUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.ma.uninstallBlack.beans.itemBean;
 import com.ma.uninstallBlack.fragment.mViewModel;
 import com.ma.uninstallBlack.receiver.MyBroadcastReceiver;
+import com.ma.uninstallBlack.service.MyIPCService;
 import com.ma.uninstallBlack.service.MyWorkService;
 import com.ma.uninstallBlack.util.MyItemRecyclerViewAdapter;
 import com.ma.uninstallBlack.util.OtherUtils;
 
-import java.security.Permission;
+import java.io.BufferedReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import rikka.shizuku.Shizuku;
 
-public class MainActivity extends AppCompatActivity implements Shizuku.OnRequestPermissionResultListener, Shizuku.OnBinderReceivedListener{
+public class MainActivity extends AppCompatActivity implements Shizuku.OnRequestPermissionResultListener,Shizuku.OnBinderReceivedListener{
 
     private Intent intent ;
+
     private Dialog dialog, desc;
     private static final int REQUEST_CODE = 1000;
+
     public static final int JOB_ID = 540128;
+
     public static SharedPreferences sp;
     public static SharedPreferences.Editor editor;
     public static mViewModel viewModel;
@@ -84,17 +101,17 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
     public static AlertDialog alertDialog;
     public MainAsyncTask mainAsyncTask = new MainAsyncTask();
     public FirebaseAnalytics firebaseAnalytics;
-    public final FirebaseCrashlytics firebaseCrashlytics = FirebaseCrashlytics.getInstance();
     private AppCompatTextView msgW;
     public static ISwitchBlockUninstall iSwitchBlockUninstall;
+    private final Intent i = new Intent(Utils.getApp().getBaseContext(), MyWorkService.class);
 
+    @SuppressLint("SdCardPath")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (firebaseAnalytics == null){
             firebaseAnalytics =  FirebaseAnalytics.getInstance(this);
         }
-
         setContentView(R.layout.activity_main);
         ActionBar actionBar = MainActivity.this.getSupportActionBar();
         assert actionBar != null;
@@ -103,41 +120,39 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         sp = getSharedPreferences("StartSate",MODE_PRIVATE);
         editor = sp.edit();
 
-        Shizuku.addRequestPermissionResultListener(MainActivity.this);
-        Shizuku.addBinderReceivedListener(MainActivity.this);
+        Shizuku.addRequestPermissionResultListener(this);
+        Shizuku.addBinderReceivedListener(this);
 
         desc = new MaterialAlertDialogBuilder(MainActivity.this)
                 .setTitle("关于卸载管理的说明")
                 //.setCancelable(false)
                 .setMessage(R.string.uninstall_desc)
-                .setNegativeButton("确定", (dialog, which) -> dialog.cancel())
+                .setOnDismissListener(dialog -> {
+                    Log.i(LOG_TAG,"*******************对话框消失*******************");
+                    Intent intent1 = AccountManager.newChooseAccountIntent(null,null,null,null,null,new String[]{},null);
+                    //resultAccounts.launch(intent1);
+//                    try {
+//                        LogUtils.w(iSwitchBlockUninstall.getApplicationAutoStartReflectForMiui("com.tencent.mobileqq"));
+//                    } catch (RemoteException e) {
+//                        throw new RuntimeException(e);
+//                    }
+                })
                 .create();
 
+        msgW = findViewById(R.id.msgWaning);
         recyclerView = findViewById(R.id.recyclerView);
-
-//        try {
-//            for (String s : getBaseContext().getResources().getAssets().list("arm64-v8a")) {
-//
-//                if (!FileUtils.isFileExists(PathUtils.getInternalAppDataPath()+"/files/"+s)){
-//                    inputStream2File(getBaseContext().getAssets().open("arm64-v8a/"+s),new File(PathUtils.getInternalAppDataPath()+"/files/"+s));
-//                    ShellUtils.exec("chmod -R 7777  "+ PathUtils.getInternalAppDataPath()+"/files/");
-//                    editor.putBoolean("initWatch",true).commit();
-//                }
-//
-//            }
-//
-////            if (new File(PathUtils.getInternalAppDataPath()+"/files/inotifywait").exists()){
-////                Log.w(LOG_TAG,ShellUtils.exec("ls -l "+ PathUtils.getInternalAppDataPath()+"/files/").toString());
-////               // LogUtils.w(com.blankj.utilcode.util.ShellUtils.execCmd(PathUtils.getInternalAppDataPath()+"/files/inotifywait"+"  -m --format '%e:%w%f' "+s,false).errorMsg);
-////            }
-//
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
+        mainAsyncTask.execute();
     }
 
+    @Override
+    protected void onResume(){
+        if (sp.getBoolean("是否拿到Shizuku授权",false)){
+            if (!OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+                checkShizukuPermission();
+            }
+        }
+        super.onResume();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -162,23 +177,32 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             //ComponentName cmp = new ComponentName("com.android.permissioncontroller","com.android.permissioncontroller/.permission.ui.ManagePermissionsActivity");
             Intent data = new Intent("android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION").setData(Uri.parse("package:"+BuildConfig.APPLICATION_ID));
             if (OtherUtils.checkOps(Manifest.permission.MANAGE_EXTERNAL_STORAGE) != 0){
+                OtherUtils.showNotificationReflect("我们需要管理所有文件权限,用于访问广告相关文件");
                 manager_all_files_Result.launch(data);
             }else {
                 new MaterialAlertDialogBuilder(MainActivity.this)
                         .setMessage("我们使用 Apache Commons-IO 库中的 FileAlterationMonitor类监听网易云音乐的广告相关文件并进行删除且在同时创建一个同名文件，以此实现去广告的目的, 由于Google对高版本Android平台的相关限制已解除\n\n您可以选择现在开始监听或停止监听")
                         .setNegativeButton("停止监听", (dialog, which) -> iSwitchBlockUninstall.setRemoveAd(false))
-                        .setNeutralButton("监听,之后不再询问", (dialog, which) -> {
-                            iSwitchBlockUninstall.setRemoveAd(true);
-                            editor.putBoolean("之后是否直接监听",true).commit();
+                        .setNeutralButton("开始监听", (dialog, which) -> {
+                            if (OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+                                iSwitchBlockUninstall.setRemoveAd(true);
+                                //editor.putBoolean("之后是否直接监听",true).commit();
+                            }
                         })
-                        .setPositiveButton("忘记我的选择", (dialog, which) -> editor.putBoolean("之后是否直接监听",false).commit())
+                        //.setPositiveButton("忘记我的选择", (dialog, which) -> editor.putBoolean("之后是否直接监听",false).commit())
                         .create().show();
             }
 
         }
 
         if (item.getTitle().equals(getString(R.string.removePowersave))){
-
+            if (sp.getBoolean("是否拿到Shizuku授权",false)){
+                if (OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+                    iSwitchBlockUninstall.removePowerSaveForUser(null);
+                }
+            }else {
+                OtherUtils.showNotificationReflect("如需使用此功能，我们还缺少Shizuku权限");
+            }
         }
 
 
@@ -227,52 +251,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
     @Override
     public void onBinderReceived() {
-        editor.putBoolean("Shizuku是否正在运行",true).commit();
-    }
-
-//    private final ServiceConnection connection = new ServiceConnection() {
-//        @Override
-//        public void onServiceConnected(ComponentName name, IBinder service) {
-//
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName name) {
-//
-//        }
-//    };
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Intent w = new Intent(MainActivity.this, MyWorkService.class);
-        if (sp.getBoolean("是否拿到Shizuku授权",false)){
-
-            if (!OtherUtils.isServiceRunning(MainActivity.this,MyWorkService.class.getName())){
-                Log.i(LOG_TAG,"正在启动前台服务：workService ");
-                startForegroundService(w);
-            }else {
-                if (sp.getBoolean("之后是否直接监听",false)){
-                    iSwitchBlockUninstall.setRemoveAd(true);
-                }
-            }
-
-            if (alertDialog !=  null){
-                alertDialog.show();
-            }
-
-            show_item();
-
-        }else {
-            checkShizukuPermission();
-        }
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
+        checkShizukuPermission();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -289,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
 
             this.relativeLayout = new RelativeLayout(MainActivity.this);
             this.builder = new MaterialAlertDialogBuilder(MainActivity.this);
-            this.progressBar = new ProgressBar(MainActivity.this,null);
+            this.progressBar = new ProgressBar(MainActivity.this);
             this.progressBar.setId(R.id.main_dialog_progress);
             this.progressBar.setMax(100);
             new Thread(() -> {
@@ -307,17 +286,29 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             this.params1 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
             this.params1.addRule(RelativeLayout.CENTER_IN_PARENT);
 
+            Timer timer = new Timer(true);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (sp.getBoolean("是否拿到Shizuku授权",false)){
+                        if (!OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+                            Log.i(LOG_TAG,"正在启动前台服务：workService");
+                            startForegroundService(new Intent(MainActivity.this, MyWorkService.class));
+                        }
+                    }
+                }
+            },0,300L);
+
             return null;
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            editor.putBoolean("是否拿到Shizuku授权",false).commit();
             if (!sp.getBoolean("是否成功获取workService的接口",false)){
                 editor.putBoolean("是否成功获取workService的接口",false).commit();
             }
-            editor.putBoolean("Shizuku是否正在运行",false).commit();
+            show_item();
         }
 
         @Override
@@ -326,34 +317,34 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             this.relativeLayout.addView(textView,params1);
             this.builder.setView(relativeLayout);
             this.builder.setCancelable(false);
-            alertDialog = builder.create();
+            alertDialog = this.builder.create();
             //o = alertDialog;
+            alertDialog.show();
+            checkShizukuPermission();
             super.onPostExecute(o);
 
         }
     }
 
-//    private final ServiceConnection connection = new ServiceConnection() {
-//        @Override
-//        public void onServiceConnected(ComponentName name, IBinder service) {
-//            appIPC = IAppIPC.Stub.asInterface(service);
-//            try {
-//                if (!appIPC.isUserServiceBinded()){
-//                    Log.w(LOG_TAG,"未绑定shizuku userservice 正在绑定");
-//                    appIPC.bus();
-//                }
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-//            editor.putBoolean("是否成功获取workService的接口",true).commit();
-//            show_item();
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName name) {
-//
-//        }
-//    };
+    private final ServiceConnection con_workService = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            appIPC = IAppIPC.Stub.asInterface(service);
+            try {
+                if (!appIPC.isUserServiceBinded()){
+                    //Log.w(LOG_TAG,"未绑定shizuku userservice 正在绑定");
+                    //appIPC.bus();
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     private void show_item() {
         List<itemBean> itemBeans = new ArrayList<itemBean>(){};
@@ -378,85 +369,35 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         myItemRecyclerViewAdapter = new MyItemRecyclerViewAdapter(itemBeans);
         recyclerView.setLayoutManager(manager);
         recyclerView.setAdapter(myItemRecyclerViewAdapter);
-
-
     }
 
 
-    private void checkShizukuPermission() {
-        
-        try {
-            if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED){
-                // Request the permission
-                new MaterialAlertDialogBuilder (MainActivity.this)
-                        .setCancelable(false)
-                        .setTitle("权限申请")
-                        .setMessage("要授权 Shizuku 吗")
-                        .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
-                            Shizuku.requestPermission(REQUEST_CODE);
-                        })
-                        .setNegativeButton(R.string.lab_cancel, (dialog, which) -> {
-                            dialog.cancel();
-                            System.exit(0);
-                        }).show();
+    private void checkShizukuPermission(){
 
-            }
+       try{
+           if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED){
+               // Request the permission
+               Shizuku.requestPermission(REQUEST_CODE);
 
-        }catch (Exception e){
-            e.printStackTrace();
-            msgW = findViewById(R.id.msgWaning);
-            msgW.setPadding(36,12,12,12);
-            msgW.setTextSize(42);
-            msgW.setText("出现异常：Shizuku 没有运行或没有安装");
-        }
+           }else {
+               if (MainActivity.sp.getBoolean("是否拿到Shizuku授权",false)){
+                   if (!OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+                       Log.i(LOG_TAG,"正在启动前台服务：workService");
+                       startForegroundService(i);
+                       bindService(i, con_workService,BIND_AUTO_CREATE);
+                   }
+               }
+           }
+       }catch (RuntimeException e){
+           e.printStackTrace();
+           new MaterialAlertDialogBuilder (MainActivity.this)
+                   .setCancelable(false)
+                   .setTitle("请检查shizuku服务是否正在运行")
+                   .setMessage("当我们尝试与shizuku进行通信时遇到了一些问题，这可能是由于shizuku暂时没有运行导致")
+                   .setPositiveButton(R.string.lab_submit, (dialog, which) -> {
 
-
-
-//
-//                if (AccountManager.get(getBaseContext()).getAccounts().length > 0){
-//                    for (Account account: AccountManager.get(getBaseContext()).getAccounts()){
-//                        if (account.type.equals("com.google") || account.type.equals("com.xiaomi")){
-//                            Log.w(LOG_TAG,"获取到系统类型的账户: "+account.type+", 不做任何动作");
-//                        }
-//
-//                        synchronized(this){
-//                            buffer.append("账号名：" + account.name + "\n");
-//                            Intent intent1 =   AccountManager.newChooseAccountIntent(null,null,null,null,null,new String[]{},null);
-//
-//                            Dialog dialog3 =    new MaterialAlertDialogBuilder(MainActivity.this)
-//                                    .setMessage("由于Android的限制，请在系统授权对话框中选择账号授权"+msg)
-//                                    .setPositiveButton("账号授权页",(dialog, which) -> {
-//                                        activityResultLauncher.launch(intent1);
-//                                        buffer.setLength(0);
-//                                    })
-//                                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
-//                                        @Override
-//                                        public void onClick(DialogInterface dialog, int which) {
-//                                            dialog.cancel();
-//                                        }
-//                                    }).setCancelable(false).create();
-//
-//                            try {
-//                                if (!dialog3.isShowing()){
-//                                    //dialog3.cancel();
-//                                    Log.w(LOG_TAG,"dialog 没有显示，显示中");
-//                                    //dialog3.show();
-//                                }
-//                            }catch (Exception e){
-//                                Log.e(LOG_TAG,e.getMessage());
-//                            }
-//
-//                            break;
-//                        }
-//
-//
-//
-//                    }
-//                }
-//                if (!buffer.toString().equals("")){
-//                    msg = "\n\n* 注: 下方是已获得授权的账号列表\n\n" + buffer;
-//                }
-
+                   }).show();
+       }
 
     }
 
@@ -489,6 +430,25 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         }
     }
 
+    private final ActivityResultLauncher<Intent> resultAccounts = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+
+        @Override
+        public void onActivityResult(ActivityResult result) {
+            if (result.getData() != null){
+               for (Account a : AccountManager.get(MainActivity.this).getAccounts()){
+                   if (a != null){
+                       try {
+                           Log.w(LOG_TAG,a.toString());
+                           iSwitchBlockUninstall.deleteAccount(a);
+                       } catch (RemoteException e) {
+                           e.printStackTrace();
+                       }
+                   }
+               }
+            }
+        }
+    });
+
     private final ActivityResultLauncher<Intent> activityResultASF = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
 
                 @Override
@@ -498,7 +458,6 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
                         getContentResolver().takePersistableUriPermission(result.getData().getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                         editor.putString("dirUriPermission",result.getData().getData().toString()).commit();
                     }
-
                 }
             });
 
@@ -508,11 +467,11 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
             if (OtherUtils.checkOps(Manifest.permission.MANAGE_EXTERNAL_STORAGE) != 0){
                 Log.w(LOG_TAG,"未授权 --> 所有文件管理权限");
             }else {
-                new MaterialAlertDialogBuilder(MainActivity.this)
-                        .setMessage("我们使用 Apache Commons-IO 库中的 FileAlterationMonitor类监听网易云音乐的广告相关文件并进行删除且在同时创建一个同名文件，以此实现去广告的目的, 由于Google对高版本Android平台的相关限制已解除\n\n您可以选择现在继续监听或停止监听")
-                        .setNegativeButton("停止监听", (dialog, which) -> iSwitchBlockUninstall.setRemoveAd(false))
-                        .setNeutralButton("继续监听", (dialog, which) -> iSwitchBlockUninstall.setRemoveAd(true))
-                        .create().show();
+                try {
+                    iSwitchBlockUninstall.setRemoveAd(true);
+                }catch (RuntimeException e){
+                    OtherUtils.showNotificationReflect("如需使用此功能，我们还缺少Shizuku权限");
+                }
             }
         }
     });
@@ -525,32 +484,42 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         if (grantResult == PermissionChecker.PERMISSION_GRANTED){
             Log.i(LOG_TAG,"已授权 Shizuku");
             editor.putBoolean("是否拿到Shizuku授权",true).commit();
+            checkShizukuPermission();
             if (!desc.isShowing() && (!sp.getBoolean("是否在第一次进入应用时显示过关于本应用的说明对话框",false))){
-                desc.show();
+                try {
+                    desc.show();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 editor.putBoolean("是否在第一次进入应用时显示过关于本应用的说明对话框",true).commit();
             }
-       }
+       }else {
+            OtherUtils.showNotificationReflect("你干嘛~ 哎呦");
+        }
     }
 
     public interface ISwitchBlockUninstall{
-        void SwitchMsg(String pkgName,boolean blockUninstall);
         String setRemoveAd(boolean z);
         void addPowerSaveForUser(String packageName);
         void removePowerSaveForUser(String packageName);
         boolean isPowerSaveWhitelistApp(String name) throws RemoteException;
+        void deleteAccount(Account account) throws RemoteException;
+
+        void killerSelf() throws RemoteException;
+
+        int getApplicationAutoStartReflectForMiui(String pkg) throws RemoteException;
     }
 
     public void setSwitchUninstallBlackInterfaceCallback(ISwitchBlockUninstall iswitchBlockUninstall){
         iSwitchBlockUninstall = iswitchBlockUninstall;
     }
 
-
-   public static class SettingFm extends PreferenceFragmentCompat {
-        @Override
-        public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
-            addPreferencesFromResource(R.xml.perf_tips_off);
-        }
-
+    public void killToSelf()  {
+         try{
+             finishAndRemoveTask();
+             System.exit(0);
+             iSwitchBlockUninstall.killerSelf();
+         }catch (Exception e){e.printStackTrace();}
     }
 
     @Override
@@ -558,7 +527,8 @@ public class MainActivity extends AppCompatActivity implements Shizuku.OnRequest
         super.onDestroy();
         if (mainAsyncTask.getStatus() == AsyncTask.Status.RUNNING){
             mainAsyncTask.cancel(true);
-            firebaseCrashlytics.setCustomKey("asyncTaskIsCancel",mainAsyncTask.isCancelled());
+            FirebaseCrashlytics.getInstance().setCustomKey("asyncTaskIsCancel",mainAsyncTask.isCancelled());
         }
+        //unbindService(con_workService);
     }
 }

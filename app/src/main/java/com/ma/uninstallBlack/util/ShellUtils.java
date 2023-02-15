@@ -15,8 +15,8 @@ public class ShellUtils {
     /**
      * @param cmd
      *
-     * 执行命令
-     * @return*/
+     * @return 命令结果
+     **/
 
     public static StringBuilder exec(String cmd){
 

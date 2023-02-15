@@ -2,6 +2,8 @@ package com.ma.uninstallBlack.util;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
+import static com.ma.uninstallBlack.service.MyIPCService.JOB2_ID;
+
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.job.JobInfo;
@@ -13,19 +15,28 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.core.app.NotificationManagerCompat;
+
+import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.NotificationUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.firebase.FirebaseApp;
+import com.ma.uninstallBlack.BuildConfig;
+import com.ma.uninstallBlack.MainActivity;
 import com.ma.uninstallBlack.activity.DialogActivity;
 import com.ma.uninstallBlack.receiver.MyBroadcastReceiver;
 import com.ma.uninstallBlack.service.MyJobService;
+import com.ma.uninstallBlack.service.MyWorkService;
 
 import org.lsposed.hiddenapibypass.HiddenApiBypass;
 
+import java.lang.reflect.Method;
+
 @SuppressLint("DiscouragedPrivateApi")
-public class BaseAppliation extends Application {
-    public static final int JOB2_ID = 100000;
+public class BaseAppliation extends Application{
+
+    public static JobScheduler jobScheduler;
     public static final int InitTime = (int) SystemClock.uptimeMillis();
-    public static JobScheduler jobScheduler = null;
     static final String LOG_TAG = BaseAppliation.class.getSimpleName();
     @Override
     protected void attachBaseContext(Context base) {
@@ -36,22 +47,17 @@ public class BaseAppliation extends Application {
         }
 
         Utils.init(this);
-
         Intent intent = new Intent("com.ma.lockscreen.receiver");
         intent.setComponent(new ComponentName(getPackageName(), MyBroadcastReceiver.class.getName()));
         //sendBroadcast(intent);
 
-        JobInfo info = new JobInfo.Builder(JOB2_ID,new ComponentName(getPackageName(), MyJobService.class.getName()))
-                .setPersisted(true) //重启后任务继续执行
+        JobInfo jobInfo = new JobInfo.Builder(JOB2_ID,new ComponentName(BuildConfig.APPLICATION_ID, MyJobService.class.getName()))
+                .setPersisted(true)
                 .setPeriodic(JobInfo.getMinPeriodMillis())
                 .build();
 
         jobScheduler = (JobScheduler) this.getBaseContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        try{
-            jobScheduler.schedule(info);
-        }catch (RuntimeException e){
-            Log.e(LOG_TAG,e.getMessage());
-        }
+        jobScheduler.schedule(jobInfo);
 
         StringBuilder ss = new StringBuilder();
 
@@ -66,11 +72,4 @@ public class BaseAppliation extends Application {
         });
 
     }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-
 }

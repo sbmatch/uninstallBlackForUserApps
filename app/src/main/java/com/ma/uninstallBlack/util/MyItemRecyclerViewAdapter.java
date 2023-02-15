@@ -1,6 +1,10 @@
 package com.ma.uninstallBlack.util;
 
+import static com.ma.uninstallBlack.MainActivity.sp;
+
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +17,7 @@ import androidx.appcompat.widget.AppCompatTextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blankj.utilcode.util.ToastUtils;
+import com.blankj.utilcode.util.Utils;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.ma.uninstallBlack.MainActivity;
@@ -96,7 +101,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 
             mSwitchMaterial.setOnClickListener(v -> {
 
-                try{
+                if (OtherUtils.isServiceRunning(MyWorkService.class.getName()) && sp.getBoolean("是否绑定userService",false)){
                     if (zz){
                         switchBlockUninstallForUserReflect(itemBean.packageName,true);
                         Log.i(LOG_TAG,mTextView.getText()+" 已开启, 当前禁止卸载状态："+OtherUtils.getBlockUninstallForUserReflect(itemBean.packageName,0));
@@ -108,11 +113,9 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
                         ToastUtils.showShort(itemBean.AppName+" 已允许卸载");
                         Log.i(LOG_TAG,mTextView.getText()+" 已关闭, 当前禁止卸载状态："+OtherUtils.getBlockUninstallForUserReflect(itemBean.packageName,0));
                     }
-
-                } catch (Exception e) {
-                    //MainActivity.editor.putString("崩溃","堆栈信息: \n\n"+e.fillInStackTrace()+"");
-                    e.printStackTrace();
-                    FirebaseCrashlytics.getInstance().recordException(e);
+                }else {
+                    mSwitchMaterial.setChecked(itemBean.isUnBlack);
+                    OtherUtils.showNotificationReflect("空指针异常");
                 }
 
             });
@@ -120,15 +123,19 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
                 zz = isChecked;
             });
 
-            boolean z = MainActivity.sp.getBoolean(itemBean.packageName,itemBean.isUnBlack); // 从 SharedPreferences 获取应用状态
+            boolean z = sp.getBoolean(itemBean.packageName,itemBean.isUnBlack); // 从 SharedPreferences 获取应用状态
             mSwitchMaterial.setChecked(z);
         }
     }
 
-    public static void switchBlockUninstallForUserReflect(String package_name, boolean blockUninstall){
+    public static void switchBlockUninstallForUserReflect(String pkg, boolean blockUninstall) {
         if (MainActivity.iSwitchBlockUninstall != null){
             Log.w(LOG_TAG,"正在调用接口...");
-            MainActivity.iSwitchBlockUninstall.SwitchMsg(package_name, blockUninstall);
+            try{
+                OtherUtils.userService.setBlockUninstallForUser(pkg,blockUninstall,0);
+            }catch (Throwable e){
+                Log.e(LOG_TAG,e.toString());
+            }
         }
     }
 }

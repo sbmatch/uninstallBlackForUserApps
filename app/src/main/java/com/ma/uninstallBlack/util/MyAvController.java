@@ -1,17 +1,29 @@
 package com.ma.uninstallBlack.util;
 
+import android.annotation.SuppressLint;
 import android.app.IActivityController;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.blankj.utilcode.util.Utils;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.ma.uninstallBlack.BuildConfig;
 import com.ma.uninstallBlack.MainActivity;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 public class MyAvController extends IActivityController.Stub{
 
-    private final String Log_Tag = MyAvController.class.getSimpleName();
+    private final String Log_Tag = "ActivityController";
+    public PackageManager pm = Utils.getApp().getPackageManager();
+    public List<String> xhw = new ArrayList<>();
 
     @Override
     public boolean activityStarting(Intent intent, String pkg) throws RemoteException {
@@ -23,12 +35,34 @@ public class MyAvController extends IActivityController.Stub{
 //            return false;
 //        }
 
+        //xhw.add("com.tencent.mobileqq");
+        xhw.add("com.xiaomi.market");
+        xhw.add("com.android.updater");
+
+        try {
+            PackageInfo packageInfo = pm.getPackageInfo(pkg,0);
+            String appName = (String) packageInfo.applicationInfo.loadLabel(pm);
+            Log.i(Log_Tag,"系统正在尝试启动【"+appName+"】"+" 包名："+pkg);
+            if (xhw.contains(pkg)){
+                Log.e(Log_Tag,"已阻止启动【"+appName+"】");
+                //OtherUtils.showNotificationReflect("已阻止启动【"+appName+"】");
+                return false;
+            }
+        }catch (android.content.pm.PackageManager.NameNotFoundException e){
+            e.fillInStackTrace();
+        }
         return true;
     }
 
     @Override
     public boolean activityResuming(String pkg) throws RemoteException {
         //Log.w(Log_Tag,"activityResuming: "+pkg);
+
+        if (xhw.contains(pkg)){
+            Log.e(Log_Tag,"已阻止启动【"+pkg+"】");
+            //OtherUtils.showNotificationReflect("已阻止启动【"+appName+"】");
+            return false;
+        }
 
         return true;
     }
@@ -52,8 +86,9 @@ public class MyAvController extends IActivityController.Stub{
     @Override
     public int appEarlyNotResponding(String processName, int pid, String annotation) throws RemoteException {
         if (processName.equals(BuildConfig.APPLICATION_ID)){
-            Log.e("ANR","本应用即将进入ANR状态\n\n进程名："+processName+"\nPid: "+pid+"\n原因: "+annotation);
-            FirebaseCrashlytics.getInstance().setCustomKey("ANR","即将进入ANR状态 --> 进程名："+processName+"\nPid: "+pid+"\n原因: "+annotation);
+            Log.e("ANR","processName："+processName+" Pid: "+pid+" 原因: "+annotation);
+            OtherUtils.showNotificationReflect("即将触发ANR:\nprocessName："+processName+"\nPid: "+pid+"\n原因: "+annotation);
+            FirebaseCrashlytics.getInstance().setCustomKey("即将触发ANR","即将进入ANR状态 --> 进程名："+processName+"\nPid: "+pid+"\n原因: "+annotation);
         }
         return 0;
     }

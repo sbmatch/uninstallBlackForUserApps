@@ -30,11 +30,9 @@ interface IUserService {
     void ac_reg_proObserver(in IProcessObserver iProcessObserver) = 6;
     void ac_unreg_proObserver(in IProcessObserver iProcessObserver) = 12;
     void ac_enableFreezer(boolean z) = 7;
-    int ac_getOomAdjOfPid(int pid) = 8;
+
     void ac_killAllBackgroundProcesses() =9;
     void forceStopPackage(String packageName, int userId) = 10;
-
-    boolean isAppFreezerSupported() = 13;
 
     int getPackageProcessState(String packageName, String callingPackage) = 15;
     List<ActivityManager.RunningAppProcessInfo> getRunningAppProcesses() = 16;
@@ -42,12 +40,10 @@ interface IUserService {
                     in String resolvedType, boolean requireForeground, in String callingPackage,
                     in String callingFeatureId, int userId) = 17;
 
-    void startForegroundService(in Intent service) = 18;
 
     boolean setBlockUninstallForUser(String packageName, boolean blockUninstall, int userId) = 20;
     boolean getBlockUninstallForUser(String packageName, int userId) = 21;
     String[] getUserPowerWhitelist() = 22;
-     Account[] getAccounts ()= 23;
 
    void grantRuntimePermission(String packageName, String permissionName, int userId) = 24;
 
@@ -59,31 +55,19 @@ interface IUserService {
   Account[] getAccountsForPackage(String packageName, int uid, String opPackageName) = 27;
 
   Map getAccountsAndVisibilityForPackage(in String packageName, in String accountType) = 31;
-
   Map getPackagesAndVisibilityForAccount(in Account account) = 32;
   boolean setAccountVisibility(in Account a, in String packageName, int newVisibility) =33;
     int getAccountVisibility(in Account a, in String packageName) = 34;
-
 
     void registerAccountListener(in String[] accountTypes, String opPackageName) =28;
     void unregisterAccountListener(in String[] accountTypes, String opPackageName) = 29;
 
     void setActivityController(in IActivityController controller) = 37;
 
-    ComponentName getdpm()= 38;
-
     void startWatchFromFileObserver(in String file) = 39;
 
     void stopWatchFromFileObserver() = 40;
 
-    void setSystemUpdatePolicy(in ComponentName who, in SystemUpdatePolicy policy) = 41;
-    SystemUpdatePolicy getSystemUpdatePolicy() = 42;
-
     void deleteExistingPackageAsUser(in VersionedPackage versionedPackage, IPackageDeleteObserver2 observer, int userId) = 43;
-    void deletePackageVersioned(in VersionedPackage versionedPackage,
-                IPackageDeleteObserver2 observer, int userId, int flags) = 44;
-
-    String doInstallApk(in List<Uri> uris) = 45;
-
-    //void updateShortcuts(String packageName, in ParceledListSlice shortcuts, int userId) = 46;
+    void deletePackageVersioned(in VersionedPackage versionedPackage, IPackageDeleteObserver2 observer, int userId, int flags) = 44;
 }

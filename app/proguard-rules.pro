@@ -23,8 +23,12 @@
 -allowaccessmodification
 
 # 包名不混合大小写
--dontusemixedcaseclassnames
+#-dontusemixedcaseclassnames
 # 禁用预验证
 -dontpreverify
 # 忽略警告
 -dontwarn com.**
+#====================抛出异常时保留代码行号
+-keepattributes SourceFile,LineNumberTable
+#====================代码混淆压缩比，在0~7之间
+-optimizationpasses 5

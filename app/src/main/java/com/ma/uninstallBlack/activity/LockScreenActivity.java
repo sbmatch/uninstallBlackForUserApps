@@ -109,9 +109,7 @@ public class LockScreenActivity extends AppCompatActivity {
                     e.printStackTrace();
                     //Toast.makeText(LockScreenActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
                     new MaterialAlertDialogBuilder(LockScreenActivity.this).setMessage(e.fillInStackTrace()+"").show();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
+                } catch (InvocationTargetException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
 
@@ -126,6 +124,7 @@ public class LockScreenActivity extends AppCompatActivity {
             } else {
                 res.append("invalid binder for ").append(componentName).append(" received");
             }
+
         }
 
         @Override

@@ -1,14 +1,19 @@
 package com.ma.uninstallBlack.receiver;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.ma.uninstallBlack.MainActivity.sp;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.blankj.utilcode.util.ActivityUtils;
+import com.blankj.utilcode.util.ProcessUtils;
+import com.blankj.utilcode.util.ServiceUtils;
+import com.blankj.utilcode.util.Utils;
 import com.ma.uninstallBlack.MainActivity;
 import com.ma.uninstallBlack.service.MyWorkService;
 import com.ma.uninstallBlack.util.OtherUtils;
@@ -18,7 +23,8 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
     public static final String LOG_TAG = "MyBroadcastReceiver";
 
-    private BroadcastMsg broadcastMsg = null;
+    private BroadcastMsg broadcastMsg;
+    public SharedPreferences sp;
 
     @SuppressLint({"SimpleDateFormat"})
     @Override
@@ -26,38 +32,27 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         // TODO: This method is called when the BroadcastReceiver is receiving
         // an Intent broadcast.
 
-        Log.w(LOG_TAG,"有新广播了 "+intent);
+        if (sp == null){
+            sp = context.getSharedPreferences("StartSate",MODE_PRIVATE);
+        }
 
         switch (intent.getAction()){
-            case Intent.ACTION_PACKAGE_REMOVED:
-                Log.w(LOG_TAG,"有软件包被卸载了 "+intent);
-                break;
-            case Intent.ACTION_PACKAGE_ADDED:
-                Log.i(LOG_TAG,"有软件包被安装了 "+intent);
-                break;
             case "com.ma.lockscreen.receiver":
+                if (sp.getBoolean("是否拿到Shizuku授权",false)){
+                    if (!OtherUtils.isServiceRunning(MyWorkService.class.getName())){
+
+                    }
+                }
                 break;
-        }
-
-        if (!intent.getAction().isEmpty()){
-            if (MainActivity.editor == null){
-                sp = context.getSharedPreferences("StartSate",MODE_PRIVATE);
-                MainActivity.editor = sp.edit();
-            }
-            if (!sp.getBoolean("isRegisterReceiver",false)){
-                MainActivity.editor.putBoolean("isRegisterReceiver",true).commit();
-            }
-        }
-
-        try{
-            if (broadcastMsg != null ){
+            case "com.ma.lockscreen.receiver.exit":
+                broadcastMsg.sendBroadcastMsg("killUSelf");
+                //ActivityUtils.finishAllActivities();
+                //Log.w(LOG_TAG,"已退出");
+                break;
+            default:
                 //Log.i(LOG_TAG,intent.getAction());
-                broadcastMsg.sendBroadcastMsg(OtherUtils.isServiceRunning(context, MyWorkService.class.getName())+"");
-            }
-        }catch (Exception e){
-            Log.e(LOG_TAG,e.getMessage());
-        }
 
+        }
 
 
     }

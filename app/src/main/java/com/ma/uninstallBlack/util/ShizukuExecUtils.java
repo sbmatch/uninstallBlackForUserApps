@@ -13,12 +13,12 @@ import rikka.shizuku.Shizuku;
 public class ShizukuExecUtils {
     private static Process p;
     private static Thread h1, h2, h3;
-    private static String inline = null;
+    private static String inline;
 
     public ShizukuExecUtils(){
 
     }
-    public static String ShizukuExec(Context context, String cmd) {
+    public static String ShizukuExec(String cmd) {
         try {
             p = Shizuku.newProcess(new String[]{"sh"}, null, null);
             OutputStream out = p.getOutputStream();
@@ -29,7 +29,7 @@ public class ShizukuExecUtils {
                 try {
                     BufferedReader mReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
                     while ((inline = mReader.readLine()) != null) {
-                       Log.i("",inline);
+                       Log.i("InputStream",inline);
                     }
                     mReader.close();
                 } catch (Exception ignored) {
@@ -39,26 +39,24 @@ public class ShizukuExecUtils {
             h3 = new Thread(() -> {
 
                 try {
-                    String inlineE;
                     BufferedReader mReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-                    while ((inlineE = mReader.readLine()) != null) {
-                        Log.e("Exec_error",inlineE);
+                    while ((inline = mReader.readLine()) != null) {
+                        Log.e("ErrorStream",inline);
                     }
                     mReader.close();
+                } catch (Exception ignored) {}
 
-                } catch (Exception ee) {
-                    Toast.makeText(context, ""+ee.getMessage(), Toast.LENGTH_SHORT).show();
-                }
             });
             h3.start();
-
             p.waitFor();
+
+            return inline;
             //String exitValue = String.valueOf(p.exitValue());
             //Log.i("",String.format("返回值：%s", exitValue));
         } catch (Exception e) {
-            Toast.makeText(context, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
         }
+
         return inline;
     }
 }

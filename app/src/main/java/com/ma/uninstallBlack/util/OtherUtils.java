@@ -1,6 +1,7 @@
 package com.ma.uninstallBlack.util;
 
 import static android.content.Context.APP_OPS_SERVICE;
+import static android.content.Context.MODE_PRIVATE;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -13,20 +14,27 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DeviceAdminReceiver;
 import android.app.admin.DevicePolicyManager;
+import android.app.admin.SystemUpdatePolicy;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.IPackageDeleteObserver2;
 import android.content.pm.IPackageInstallObserver2;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.VersionedPackage;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.FileUtils;
+import android.os.Handler;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.text.TextUtils;
@@ -36,20 +44,23 @@ import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.IntentCompat;
 import androidx.core.content.PackageManagerCompat;
 import androidx.core.content.UnusedAppRestrictionsConstants;
 
 import com.blankj.utilcode.util.LogUtils;
-import com.blankj.utilcode.util.RomUtils;
 import com.blankj.utilcode.util.Utils;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.ma.uninstallBlack.BuildConfig;
+import com.ma.uninstallBlack.IUserService;
 import com.ma.uninstallBlack.R;
+import com.ma.uninstallBlack.receiver.PolicyDeviceAdminReceiver;
+import com.ma.uninstallBlack.service.UserService;
 
 import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
@@ -62,17 +73,29 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.regex.Pattern;
+
+import rikka.shizuku.Shizuku;
 
 public class OtherUtils {
 
     public static Notification notification;
     public static FileAlterationMonitor monitor;
     static final String LOG_TAG = OtherUtils.class.getSimpleName();
+    public static DevicePolicyManager dpm = (DevicePolicyManager) Utils.getApp().getApplicationContext().getSystemService(Service.DEVICE_POLICY_SERVICE);
 
+    public static SharedPreferences sp = Utils.getApp().getSharedPreferences("StartSate",MODE_PRIVATE);
+
+    @SuppressLint("StaticFieldLeak")
+    public static IUserService userService;
+    public static ComponentName adminName = new ComponentName(Utils.getApp().getBaseContext(), PolicyDeviceAdminReceiver.class.getName());
+
+    public static String CHANNEL_ID = "2000"; //通道id
+    public static String CHANNEL_NAME = "后台任务"; //通道名
 
     public OtherUtils(){
     }
@@ -102,9 +125,9 @@ public class OtherUtils {
     }
 
 
-    public static boolean isServiceRunning(Context context, @NonNull final String className) {
+    public static boolean isServiceRunning(@NonNull final String className) {
         try {
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager) Utils.getApp().getBaseContext().getSystemService(Context.ACTIVITY_SERVICE);
             List<ActivityManager.RunningServiceInfo> info = am.getRunningServices(0x7FFFFFFF);
             if (info == null || info.size() == 0) return false;
             for (ActivityManager.RunningServiceInfo aInfo : info) {
@@ -150,17 +173,21 @@ public class OtherUtils {
     }
 
     // 通知
-    public static void showNotification(Context context, Intent intent, String CHANNEL_ID , String CHANNEL_NAME , String contentText, int importance) {
+    public static void showNotification(Intent intent, String CHANNEL_ID , String CHANNEL_NAME , String contentText, int importance) {
 
-        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager manager = (NotificationManager) Utils.getApp().getBaseContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notification = new NotificationCompat.Builder(context,CHANNEL_ID)
+        //Intent i1 = new Intent("com.ma.lockscreen.receiver.exit");
+        //intent.setComponent(new ComponentName(BuildConfig.APPLICATION_ID, MyBroadcastReceiver.class.getName()));
+        notification = new NotificationCompat.Builder(Utils.getApp().getBaseContext(),CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_baseline_bug_report_24)
                 .setAutoCancel(true)
-                //.setOngoing(true) // 正在运行后台服务
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(contentText))
+                .setOngoing(false)
+                .setStyle(new NotificationCompat.BigTextStyle())
+                .setContentText(contentText)
                 .setPriority(NotificationCompat.PRIORITY_HIGH) //优先级
-                .setContentIntent(PendingIntent.getActivity(context,1000,intent,PendingIntent.FLAG_IMMUTABLE))
+                //.addAction(R.drawable.ic_baseline_info_24,"退出",PendingIntent.getBroadcast(Utils.getApp().getBaseContext(),100,i1,PendingIntent.FLAG_IMMUTABLE))
+                .setContentIntent(PendingIntent.getActivity(Utils.getApp().getBaseContext(),1000,intent,PendingIntent.FLAG_IMMUTABLE))
                 .build();
 
 
@@ -170,7 +197,33 @@ public class OtherUtils {
             notificationChannel.setImportance(importance);
             manager.createNotificationChannel(notificationChannel);
             manager.notify(Integer.parseInt(CHANNEL_ID), notification);
+
+            Timer timer = new Timer(true);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    NotificationManagerCompat.from(Utils.getApp().getApplicationContext()).cancelAll();
+                }
+            },4000L);
         }
+    }
+
+
+    public static void setSystemUpdatePolicyReflect (SystemUpdatePolicy policy){
+        try {
+            @SuppressLint("SystemApi")
+            Method method = dpm.getClass().getMethod("setSystemUpdatePolicy", ComponentName.class, SystemUpdatePolicy.class);
+            method.invoke(dpm,adminName, policy);
+        } catch (Exception ignored) {}
+    }
+
+    public static void clearDeviceOwnerApp (){
+        try{
+            dpm.clearDeviceOwnerApp(BuildConfig.APPLICATION_ID);
+        }catch (Exception e){
+            Log.e(LOG_TAG,e.getMessage());
+        }
+        //ShizukuExecUtils.ShizukuExec("dpm remove-active-admin com.ma.blackuninstaller/com.ma.uninstallBlack.receiver.PolicyDeviceAdminReceiver");
     }
 
     /**
@@ -198,8 +251,7 @@ public class OtherUtils {
             }
         }
 
-        DevicePolicyManager dpm = (DevicePolicyManager) mContext.getSystemService(Service.DEVICE_POLICY_SERVICE);
-        try {
+       try {
             @SuppressLint("SystemApi")
             Method method = dpm.getClass().getMethod("setProfileOwner", ComponentName.class, String.class, int.class);
             return (boolean) method.invoke(dpm, admin, ownerName, userHandle);
@@ -209,23 +261,31 @@ public class OtherUtils {
         return false;
     }
 
-    public static long getLongTime() {
-        return new Date().getTime();
-    }
+   public static SystemUpdatePolicy getSystemUpdatePolicyReflect() {
+       try {
+           @SuppressLint("SystemApi")
+           Method method = dpm.getClass().getMethod("getSystemUpdatePolicy");
+           SystemUpdatePolicy policy = (SystemUpdatePolicy) method.invoke(dpm);
+           return policy;
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+       return null;
+   }
+
 
     /**
      * 获取Profile所有者
      * @return
      */
-    public static ComponentName getProfileOwner() {
-        DevicePolicyManager dpm = (DevicePolicyManager) Utils.getApp().getBaseContext().getSystemService(Service.DEVICE_POLICY_SERVICE);
+    public static boolean isAdminActive() {
         try {
-            Method method = dpm.getClass().getMethod("getProfileOwner");
-            return (ComponentName) method.invoke(dpm);
+            Method method = dpm.getClass().getMethod("isAdminActive", ComponentName.class);
+            return (boolean) method.invoke(dpm,adminName);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return false;
     }
 
 
@@ -244,6 +304,34 @@ public class OtherUtils {
             FirebaseCrashlytics.getInstance().setCustomKey("反射","方法：android.content.pm.IPackageManager.getBlockUninstallForUser(String.class,int.class) 堆栈: "+e.fillInStackTrace());
         }
         return false;
+    }
+
+    public static void showNotificationReflect(String msg){
+        try {
+            @SuppressLint("PrivateApi")
+            Class<?> clazz = OtherUtils.class;
+            @SuppressLint("DiscouragedPrivateApi")
+            Method method = clazz.getMethod("showNotification", Intent.class, String.class, String.class, String.class, int.class);
+            method.setAccessible(true);
+            method.invoke(null,new Intent(),CHANNEL_ID,CHANNEL_NAME,msg,NotificationManager.IMPORTANCE_HIGH);
+        } catch (RuntimeException | NoSuchMethodException | IllegalAccessException |
+                 InvocationTargetException e) {
+            Log.e("反射","方法：android.content.pm.IPackageManager.getBlockUninstallForUser(String.class,int.class) 堆栈: "+e.fillInStackTrace());
+        }
+    }
+
+    public static void showNotificationReflect(Intent intent, String msg){
+        try {
+            @SuppressLint("PrivateApi")
+            Class<?> clazz = OtherUtils.class;
+            @SuppressLint("DiscouragedPrivateApi")
+            Method method = clazz.getMethod("showNotification", Intent.class, String.class, String.class, String.class, int.class);
+            method.setAccessible(true);
+            method.invoke(null, intent, CHANNEL_ID, CHANNEL_NAME, msg, NotificationManager.IMPORTANCE_HIGH);
+        } catch (RuntimeException | NoSuchMethodException | IllegalAccessException |
+                 InvocationTargetException e) {
+            Log.e("反射","方法：android.content.pm.IPackageManager.getBlockUninstallForUser(String.class,int.class) 堆栈: "+e.fillInStackTrace());
+        }
     }
 
     public static void requestPermissionsNative(@NonNull Activity activity, @NonNull String[] strArr, int i) {
@@ -296,6 +384,108 @@ public class OtherUtils {
         }
     };
 
+
+    public class mContentObserver extends ContentObserver {
+
+        public Handler handler;
+        public Context context;
+        public List<Uri> uriBlackList = new ArrayList<>();
+
+        public mContentObserver(Context context,Handler handler) {
+            super(handler);
+            this.handler = handler;
+            this.context = context;
+            uriBlackList.add(Uri.parse("content://settings/system/launcher_state"));
+            uriBlackList.add(Uri.parse("content://settings/system/count_for_mi_connect"));
+            uriBlackList.add(Uri.parse("content://settings/system/screen_brightness"));
+            uriBlackList.add(Uri.parse("content://settings/system/contrast_alpha"));
+            uriBlackList.add(Uri.parse("content://settings/system/peak_refresh_rate"));
+            uriBlackList.add(Uri.parse("content://settings/secure/freeform_timestamps"));
+            uriBlackList.add(Uri.parse("content://settings/secure/freeform_window_state"));
+            uriBlackList.add(Uri.parse("content://settings/secure/applock_mask_notify"));
+            uriBlackList.add(Uri.parse("content://settings/global/ble_scan_low_power_window_ms"));
+            uriBlackList.add(Uri.parse("content://settings/global/ble_scan_low_power_interval_ms"));
+            uriBlackList.add(Uri.parse("content://settings/system/apptimer_load_data_time"));
+            uriBlackList.add(Uri.parse("content://settings/global/fast_connect_ble_scan_mode"));
+            uriBlackList.add(Uri.parse("content://settings/global/nsd_on"));
+            uriBlackList.add(Uri.parse("content://settings/secure/media_button_receiver"));
+            uriBlackList.add(Uri.parse("content://settings/system/next_alarm_formatted"));
+        }
+
+        @Override
+        public void onChange(boolean selfChange, @Nullable Uri uri, int flags) {
+            if (!uriBlackList.contains(uri)) {
+                Log.w("mContentObs", "Uri: " + uri + " Flags:" + flags);
+                String uristr = uri.toString().replace("content://settings/", "");
+                String namespace = Pattern.compile("/").split(uristr)[0];
+                Cursor cursor = Utils.getApp().getBaseContext().getContentResolver().query(uri, null, null, null, null);
+                while (cursor != null && cursor.moveToNext()) {
+                    String name = cursor.getString(1);
+                    String value = cursor.getString(2);
+                    String inline = "类别：" + namespace + ",名称：" + name + ",值：" + value;
+                    //showNotion(new Intent(),inline,NotificationManager.IMPORTANCE_HIGH);
+                }
+                assert cursor != null;
+                cursor.close();
+            }
+            super.onChange(selfChange, uri, flags);
+        }
+    }
+
+    public static int getApplicationAutoStartReflectForMiui(String pkg) throws RemoteException {
+        try {
+            @SuppressLint({"SystemApi", "PrivateApi"})
+            Class<?> clazz = Class.forName("android.miui.AppOpsUtils");
+            Method method_getApplicationAutoStart = clazz.getMethod("getApplicationAutoStart",Context.class,String.class);
+            int i =  (int) method_getApplicationAutoStart.invoke(null,Utils.getApp().getBaseContext(),pkg);
+            Log.w("miui.AppOpsUtils","pkg: "+pkg+", autoStart: "+i);
+            return i;
+        } catch (Exception e) {
+            Log.e("miui.AppOpsUtils","反射失败: "+e.getMessage(),e.getCause());
+        }
+        return 1;
+    }
+
+
+    public static IUserService getUserService (boolean z){
+        ComponentName cpn = new ComponentName(BuildConfig.APPLICATION_ID, UserService.class.getName());
+        Shizuku.UserServiceArgs userServiceArgs = new Shizuku.UserServiceArgs(cpn).processNameSuffix("service");
+        ServiceConnection userServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder binder) {
+                if (binder != null && binder.pingBinder()) {
+                    userService = IUserService.Stub.asInterface(binder);
+                    Log.w(LOG_TAG, "userService 绑定成功");
+                    sp.edit().putBoolean("是否绑定userService", true).apply();
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+                Log.w(LOG_TAG, "userService断开连接...");
+            }
+        };
+
+        if (z){
+            new Thread(() -> {
+                while (userService == null){
+                    Shizuku.bindUserService(userServiceArgs,userServiceConnection);
+                    Log.i("Shizuku","绑定userService...");
+                    try {
+                        Thread.sleep(1000L);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }).start();
+        }else {
+            Shizuku.unbindUserService(userServiceArgs, userServiceConnection, true);
+            sp.edit().putBoolean("是否绑定userService",false).apply();
+        }
+
+        return  userService;
+
+    }
 
     public static void 获取未使用时的优化政策(){
         ListenableFuture<Integer> future = PackageManagerCompat.getUnusedAppRestrictionsStatus(Utils.getApp().getBaseContext());
@@ -410,5 +600,19 @@ public class OtherUtils {
             is.close();
         }
     }
+
+//     try {
+//        Class<SystemUpdatePolicy> clazz = SystemUpdatePolicy.class;
+//        SystemUpdatePolicy policy = clazz.newInstance();
+//        @SuppressLint("SoonBlockedPrivateApi")
+//        Field f = clazz.getDeclaredField("mPolicyType");
+//        f.setAccessible(true);
+//        f.setInt(clazz,4);
+//        Method getTestMethod = clazz.getDeclaredMethod("getPolicyType");
+//        int ii = (int) getTestMethod.invoke(policy);
+//        //Log.w("SystemUpdatePolicy",ii+""+f.get(clazz));
+//    }catch (Exception e){
+//        e.fillInStackTrace();
+//    }
 
 }

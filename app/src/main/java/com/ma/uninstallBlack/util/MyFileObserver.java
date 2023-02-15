@@ -43,7 +43,7 @@ public class MyFileObserver extends FileAlterationListenerAdaptor {
         if (directory.getAbsolutePath().contains("Ad")){
             Log.w(LOG_TAG,"尝试删除目录 "+directory.getName()+" --> "+directory.delete());
             FileUtils.delete(directory);
-            ShizukuExecUtils.ShizukuExec(Utils.getApp().getBaseContext(),"rm -fr "+directory.getAbsolutePath());
+            ShizukuExecUtils.ShizukuExec("rm -fr "+directory.getAbsolutePath());
         }
         super.onDirectoryChange(directory);
     }
@@ -55,7 +55,7 @@ public class MyFileObserver extends FileAlterationListenerAdaptor {
         if (directory.getAbsolutePath().contains("Ad")){
             Log.w(LOG_TAG,"尝试删除目录 "+directory.getName()+" --> "+directory.delete());
             FileUtils.delete(directory);
-            ShizukuExecUtils.ShizukuExec(Utils.getApp().getBaseContext(),"rm -fr "+directory.getAbsolutePath());
+            ShizukuExecUtils.ShizukuExec("rm -fr "+directory.getAbsolutePath());
         }
 
         super.onDirectoryCreate(directory);
@@ -66,7 +66,6 @@ public class MyFileObserver extends FileAlterationListenerAdaptor {
         Log.w(LOG_TAG,"目录已删除: --> "+ directory.getAbsolutePath());
         if (directory.getAbsolutePath().contains("Ad")){
             Log.w(LOG_TAG,"创建Ad文件: "+FileUtils.createFileByDeleteOldFile("/storage/emulated/0/Android/data/com.netease.cloudmusic/cache/Ad"));
-            //showNotificationReflect("网易云音乐广告已净化");
         }
         super.onDirectoryDelete(directory);
     }
@@ -75,7 +74,7 @@ public class MyFileObserver extends FileAlterationListenerAdaptor {
     public void onFileCreate(File file) {
         if (file.getName().contains("Ad")){
             Log.i(LOG_TAG,new SimpleDateFormat("HH:mm:ss:SSS").format(new Date().getTime())+" Ad同名文件已创建: --> " + file.getAbsolutePath());
-            //showNotificationReflect("网易云音乐广告已净化");
+            OtherUtils.showNotificationReflect("网易云音乐广告已净化");
         }
         super.onFileCreate(file);
     }
@@ -94,23 +93,6 @@ public class MyFileObserver extends FileAlterationListenerAdaptor {
     public void onStop(FileAlterationObserver observer) {
         //Log.w(LOG_TAG,"################# 停止文件监听 #################");
         super.onStop(observer);
-    }
-
-    public void showNotificationReflect(String msg){
-        try {
-            @SuppressLint("PrivateApi")
-            Class<?> clazz = Class.forName("com.ma.uninstallBlack.service.MyWorkService");
-            @SuppressLint("DiscouragedPrivateApi")
-            Method method = clazz.getDeclaredMethod("showNotion", String.class);
-            method.setAccessible(true);
-            Object obj = clazz.newInstance();
-            method.invoke(null,msg);
-        } catch (ClassNotFoundException | RuntimeException | NoSuchMethodException | IllegalAccessException |
-                 InvocationTargetException e) {
-            FirebaseCrashlytics.getInstance().setCustomKey("反射","方法：android.content.pm.IPackageManager.getBlockUninstallForUser(String.class,int.class) 堆栈: "+e.fillInStackTrace());
-        } catch (InstantiationException e) {
-           e.fillInStackTrace();
-        }
     }
 
 }
